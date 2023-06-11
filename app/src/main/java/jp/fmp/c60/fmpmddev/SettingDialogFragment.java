@@ -116,11 +116,11 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder
-            .setTitle(R.string.settng_dialog_title)
+            .setTitle(R.string.setting_dialog_title)
 
             .setView(settingView)
 
-            .setPositiveButton(R.string.settng_dialog_ok, new DialogInterface.OnClickListener() {
+            .setPositiveButton(R.string.setting_dialog_ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     // OK
                     Bundle lBundle = new Bundle();
@@ -129,7 +129,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
                     listener.onDialogPositiveClick(lBundle);
                 }
             })
-            .setNegativeButton(R.string.settng_dialog_cancel, new DialogInterface.OnClickListener() {
+            .setNegativeButton(R.string.setting_dialog_cancel, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     // Cancel
                 }

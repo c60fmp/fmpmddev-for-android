@@ -16,9 +16,9 @@
     <string name="notification_prev">prev</string>
     <string name="notification_next">next</string>
 
-    <string name="settng_dialog_title">Settings</string>
-    <string name="settng_dialog_ok">OK</string>
-    <string name="settng_dialog_cancel">Cancel</string>
+    <string name="setting_dialog_title">Settings</string>
+    <string name="setting_dialog_ok">OK</string>
+    <string name="setting_dialog_cancel">Cancel</string>
 
     <string name="directory_dialog_title">Directory</string>
     <string name="directory_dialog_ok">OK</string>
