@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">FMPMDDev</string>
+    <string name="menu_setdirectory">Set Directory</string>
+
+    <string name="control_time">00:00</string>
+    <string name="control_listitem_separator">:</string>
+    <string name="control_contentdescription_pause">pause</string>
+    <string name="control_contentdescription_forward">forward</string>
+    <string name="control_contentdescription_backward">backward</string>
+
+    <string name="root_directory_name">root</string>
+    <string name="privious_directory">..</string>
+
+    <string name="notification_play">play</string>
+    <string name="notification_pause">pause</string>
+    <string name="notification_prev">prev</string>
+    <string name="notification_next">next</string>
+
+    <string name="settng_dialog_title">Settings</string>
+    <string name="settng_dialog_ok">OK</string>
+    <string name="settng_dialog_cancel">Cancel</string>
+
+    <string name="directory_dialog_title">Directory</string>
+    <string name="directory_dialog_ok">OK</string>
+    <string name="directory_dialog_cancel">Cancel</string>
+    <string name="directory_dialog_rootdirectory">root directory : </string>
+
+
+</resources>
