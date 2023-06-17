@@ -1,4 +1,4 @@
-# FMPMDDev for android
+# FMPMDDev for Android
 
 ## 初めに
 このプログラムは、FM 音源ドライバの曲データを Windows 上で聞くためのプレイヤです。
