@@ -2,19 +2,20 @@ package jp.fmp.c60.fmpmddev;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
+
+import androidx.documentfile.provider.DocumentFile;
 
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 
 public class JFileIO {
@@ -118,16 +119,21 @@ public class JFileIO {
 
 
 	// ---------------------------------------------------------------------------
-	//	パスの解決(Drive + Path -> Extracted Path も実施)
+	//	パスの解決
 	// ---------------------------------------------------------------------------
 	protected String GetCorrectPath(String filename)
 	{
+		DocumentFile file = DocumentFile.fromSingleUri(context, Uri.parse(filename));
+		if(file.exists()) {
+			return filename;
+		}
+
 		String path = exthashmap.get(FilenameUtils.getExtension(filename).toLowerCase());
 		String fullfilename;
 		if(path == null) {
-			fullfilename = DrivePath.getExtractedPath(filename, context);
+			fullfilename = filename;
 		} else {
-			fullfilename = DrivePath.getExtractedPath(DrivePath.concat(path, FilenameUtils.getName(filename)), context);
+			fullfilename = path + "%2F" + DrivePath.getFilename(filename);
 		}
 
 		return fullfilename;
@@ -153,15 +159,13 @@ public class JFileIO {
 
 		String fullfilename = GetCorrectPath(filename);
 		if(isArchiveFile(fullfilename)) {
-
 			int zipend = fullfilename.toLowerCase().indexOf(".zip|");
 			String zipfilename = fullfilename.substring(0, zipend + 4);
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
-			try (ZipFile zipfile = new ZipFile(zipfilename)) {
-				Enumeration<? extends ZipEntry> entries = zipfile.entries();
-				while (entries.hasMoreElements()) {
-					ZipEntry entry = entries.nextElement();
+			try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)))) {
+				ZipEntry entry;
+				while ((entry = zipStream.getNextEntry()) != null) {
 					if(entry.isDirectory()) {
 						continue;
 					}
@@ -177,7 +181,7 @@ public class JFileIO {
 			}
 
 		} else {
-			File file = new File(fullfilename);
+			DocumentFile file = DocumentFile.fromSingleUri(context, Uri.parse(fullfilename));
 			if(file.exists()) {
 				result = file.length();
 			}
@@ -205,10 +209,9 @@ public class JFileIO {
 			String zipfilename = fullfilename.substring(0, zipend + 4);
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
-			try (ZipFile zipfile = new ZipFile(zipfilename)) {
-				Enumeration<? extends ZipEntry> entries = zipfile.entries();
-				while (entries.hasMoreElements()) {
-					ZipEntry entry = entries.nextElement();
+			try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)))) {
+				ZipEntry entry;
+				while ((entry = zipStream.getNextEntry()) != null) {
 					if(entry.isDirectory()) {
 						continue;
 					}
@@ -216,11 +219,10 @@ public class JFileIO {
 					if(entry.getName().equals(encodedfilename)) {
 						data = new byte[(int)entry.getSize()];
 
-						try(BufferedInputStream in = new BufferedInputStream(zipfile.getInputStream(entry))) {
-							in.read(data);
-							filepointer = 0;
-							flags = Frags.flags_open.getInt();
-						}
+						BufferedInputStream bufStream = new BufferedInputStream(zipStream);
+						bufStream.read(data);
+						filepointer = 0;
+						flags = Frags.flags_open.getInt();
 					}
 				}
 
@@ -229,16 +231,15 @@ public class JFileIO {
 			}
 
 		} else {
-			File file = new File(fullfilename);
+			DocumentFile file = DocumentFile.fromSingleUri(context, Uri.parse(fullfilename));
 			int size = (int)file.length();
 
-			try(FileInputStream fis = new FileInputStream(fullfilename);
-				BufferedInputStream bis = new BufferedInputStream(fis)){
-
+			try(InputStream stream = context.getContentResolver().openInputStream(Uri.parse(fullfilename))) {
 				data = new byte[size];
-				bis.read(data);
+				stream.read(data);
 				filepointer = 0;
 				flags = Frags.flags_open.getInt();
+				// android.util.Log.d("FMPMDDev", "Read file");
 
 			} catch (IOException e) {
 				e.printStackTrace();

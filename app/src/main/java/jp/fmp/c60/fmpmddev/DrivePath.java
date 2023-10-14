@@ -121,13 +121,15 @@ public class DrivePath {
 
     // MediaIDがディレクトリかどうか判定
     public static boolean isDirectory(String mediaId) {
-        return mediaId.endsWith("/") | mediaId.endsWith("|");
+        return mediaId.endsWith("/") | mediaId.endsWith("|") | mediaId.endsWith("%2F") | mediaId.endsWith("%2f");
     }
 
 
     // MediaIDからディレクトリ名を取得
     public static String getDirectory(String mediaId) {
-        int p = mediaId.lastIndexOf("/");
+        int p1 = mediaId.lastIndexOf("/");
+        int p2 = Math.max(mediaId.lastIndexOf("%2F"), mediaId.lastIndexOf("%2f"));
+        int p = Math.max(p1, p2);
         int q = mediaId.lastIndexOf("|");
 
         if(p >= 0 || q >= 0) {
@@ -140,10 +142,18 @@ public class DrivePath {
 
     // MediaIDからファイル名を取得
     public static String getFilename(String mediaId) {
-        int pq = Math.max(mediaId.lastIndexOf("/"), mediaId.lastIndexOf("|"));
+        int p1 = mediaId.lastIndexOf("/");
+        int p2 = Math.max(mediaId.lastIndexOf("%2F"), mediaId.lastIndexOf("%2f"));
+        int p = Math.max(p1, p2);
+        int q = mediaId.lastIndexOf("|");
+        int pq = Math.max(p, q);
 
         if(pq >= 0) {
-            return mediaId.substring(pq + 1);
+            if(p > q && p1 < p2) {
+                return mediaId.substring(pq + 3);
+            } else {
+                return mediaId.substring(pq + 1);
+            }
         } else {
             return mediaId;
         }
@@ -152,14 +162,20 @@ public class DrivePath {
 
     // MediaIDの親ディレクトリ名を取得
     public static String getParentDirectory(String mediaId) {
-        String s;
+        String s = "";
         if (DrivePath.isDirectory(mediaId)) {
-            s = mediaId.substring(0, mediaId.length() - 1);
+            if (mediaId.endsWith("/") || mediaId.endsWith("|")) {
+                s = mediaId.substring(0, mediaId.length() - 1);
+            } else if(mediaId.endsWith("%2F") || mediaId.endsWith("%2f")){
+                s = mediaId.substring(0, mediaId.length() - 3);
+            }
         } else {
             s = mediaId;
         }
 
-        int p = s.lastIndexOf("/");
+        int p1 = s.lastIndexOf("/");
+        int p2 = Math.max(s.lastIndexOf("%2F"), s.lastIndexOf("%2f"));
+        int p = Math.max(p1, p2);
         int q = s.lastIndexOf("|");
 
         if (p >= 0 || q >= 0) {

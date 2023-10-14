@@ -30,13 +30,19 @@ OpenSLPCMEvent*     openslpcmevent = NULL;
 
 
 //=============================================================================
+//	Dispatcher生成
+//=============================================================================
+void createdispatcher(void) {
+    if(dispatchermanager.size() == 0) {
+        dispatchermanager.push_back(new DISPATCHER_PMDWIN());
+        dispatchermanager.push_back(new DISPATCHER_MXDRV());
+    }
+}
+
+
+//=============================================================================
 //	初期化
 //=============================================================================
-/*
- * Class:     jp_fmp_c60_FMPMDdev
- * Method:    init
- * Signature: (Ljava/lang/String;)Z
- */
 extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_init(JNIEnv *env, jobject thiz, jobject jfileio)
 {
     for(auto& m :dispatchermanager) {
@@ -64,8 +70,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_init(J
         openslpcmevent = NULL;
     }
 
-    dispatchermanager.push_back(new DISPATCHER_PMDWIN());
-    dispatchermanager.push_back(new DISPATCHER_MXDRV());
+    createdispatcher();
 
     fader = new Fader(dispatchermanager[0]);
 
@@ -105,11 +110,6 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_init(J
 //=============================================================================
 //	終了処理
 //=============================================================================
-/*
- * Class:     jp_fmp_c60_FMPMDdev
- * Method:    exit
- * Signature: ()V
- */
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_exit(JNIEnv *env, jobject thiz) {
     if(openslpcm != NULL) {
         openslpcm->Stop();
@@ -147,8 +147,9 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_exit(JNIEn
 //=============================================================================
 extern "C" JNIEXPORT jobjectArray JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getsupportedext(JNIEnv *env, jobject thiz)
 {
-    std::set<std::string> ext;
+    createdispatcher();
 
+    std::set<std::string> ext;
     for(auto& m :dispatchermanager) {
         auto e = m->supportedext();
 
@@ -176,8 +177,9 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_ge
 //=============================================================================
 extern "C" JNIEXPORT jobjectArray JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getsupportedpcmext(JNIEnv *env, jobject thiz)
 {
-    std::set<std::string> ext;
+    createdispatcher();
 
+    std::set<std::string> ext;
     for(auto& m :dispatchermanager) {
         auto e = m->supportedpcmext();
 
@@ -203,12 +205,6 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_ge
 //=============================================================================
 //	曲データ読み込み（ファイルから）
 //=============================================================================
-/*
- * Class:     jp_fmp_c60_FMPMDdev
- * Method:    music_load
- * Signature: (Ljava/lang/String;)I
- */
-
 extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1load(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename)
 {
     jint result = 0;
@@ -254,11 +250,6 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1loa
 //=============================================================================
 //	演奏開始
 //=============================================================================
-/*
- * Class:     jp_fmp_c60_FMPMDdev
- * Method:    music_start
- * Signature: ()V
- */
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1start(JNIEnv *env, jobject thiz) {
     if (fader != NULL && openslpcm != NULL) {
         fader->music_start();
@@ -270,11 +261,6 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1sta
 //=============================================================================
 //	演奏停止
 //=============================================================================
-/*
- * Class:     jp_fmp_c60_FMPMDdev
- * Method:    music_stop
- * Signature: ()V
- */
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1stop(JNIEnv *env, jobject thiz)
 {
     if (fader != NULL && openslpcm != NULL) {

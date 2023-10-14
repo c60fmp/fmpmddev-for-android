@@ -1,11 +1,11 @@
 package jp.fmp.c60.fmpmddev;
 
-import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,7 +24,7 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -39,7 +39,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity implements ControlFragment.ControlFragmentListener, SettingDialogFragment.SettingDialogFragmentListener {
 
 	// 演奏中のファイル
-	private static final int PERMISSION_REQUEST_READ_EXTERNAL_STORAGE = 1;
+	private static final int PERMISSION_OPEN_DOCUMENT_TREE = 1;
 
 	// ルートディレクトリ
 	private String rootDirectory;
@@ -115,6 +115,13 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY, browseDirectory);
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID, playFilename);
 
+				//@ ToDo for debug
+				if(rootDirectory == null || rootDirectory.isEmpty()) {
+					checkPermission();
+				} else {
+					startMediaBrowser();
+				}
+
 			} else if(msg.what == Common.MSG_SERVICE_TO_ACTIVITY_GETSETTINGS) {
 
 				rootDirectory = msg.getData().getString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY);
@@ -162,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		transaction.commit();
 
+		// ToDo startService を の onActivityResult の後に変更する
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			//@ startService(new Intent(this, FMPMDDevService.class));
 			startForegroundService(new Intent(this, FMPMDDevService.class));
@@ -186,7 +194,12 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		setControlFragmentArguments(cBundle);
 
 		// permission を確認する
-		checkPermission();
+		// ToDo for debug
+		/*
+		if(rootDirectory == null) {
+			checkPermission();
+		}
+		*/
 
 		// bind to the Service
 		Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
@@ -195,6 +208,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 
 	private void checkPermission() {
+		/*
 		// Check if the permission has been granted
 		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
 				== PackageManager.PERMISSION_GRANTED) {
@@ -209,9 +223,18 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		}
 
 		ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
+		*/
+
+		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+		// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
+		// mdxRootUri = ActivitySelectMdxFile.getUriFromString("file://"+path);
+		// intent2.putExtra(DocumentsContract.EXTRA_INITIAL_URI, mdxRootUri);
+		startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE);
+
 	}
 
 
+	/*
 	@Override
 	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
 										   @NonNull int[] grantResults) {
@@ -240,8 +263,34 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			}
 		}
 	}
+	*/
 
 
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+		super.onActivityResult(requestCode, resultCode, resultData);
+		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE && resultCode == Activity.RESULT_OK) {
+			Uri treeUri = resultData.getData();
+			getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+			Bundle lBundle = new Bundle();
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
+			lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, docFile.getUri().toString());
+
+			try {
+				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY, 0, 0);
+				msg.setData(lBundle);
+				serviceMessenger.send(msg);
+			} catch(RemoteException e) {
+				e.printStackTrace();
+			}
+
+			startMediaBrowser();
+		}
+	}
+
+
+	/*
 	private void showPermissionError() {
 		Snackbar.make(findViewById(R.id.container), String.format("設定⇒アプリ⇒%sでストレージの権限を許可してください)", getString(R.string.app_name)), Snackbar.LENGTH_LONG).show();
 	}
@@ -250,6 +299,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	private void showPermissionWarning() {
 		Snackbar.make(findViewById(R.id.container), "アプリを再起動しストレージの権限を取得してください", Snackbar.LENGTH_LONG).show();
 	}
+	*/
 
 
 	private void startMediaBrowser() {
@@ -402,6 +452,8 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			lBundle.putString(Common.KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY, browseDirectory);
 			subscribeCache(lBundle);
 
+			//@ ToDo 無効化
+			/*
 			// 前回終了時の曲の再生を指示
 			try {
 				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS, 0, 0);
@@ -409,6 +461,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			} catch(RemoteException e) {
 				e.printStackTrace();
 			}
+			*/
 		}
 
 

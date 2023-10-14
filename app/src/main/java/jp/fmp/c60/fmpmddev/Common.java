@@ -7,13 +7,15 @@ public class Common {
 
     public static final int MSG_SERVICE_TO_ACTIVITY_INIT                    = 10002;
 
-    public static final int MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS           = 10003;
+    public static final int MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY        = 10003;
 
-    public static final int MSG_ACTIVITY_TO_SERVICE_GETSETTINGS             = 10004;
+    public static final int MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS           = 10004;
 
-    public static final int MSG_SERVICE_TO_ACTIVITY_GETSETTINGS             = 10005;
+    public static final int MSG_ACTIVITY_TO_SERVICE_GETSETTINGS             = 10005;
 
-    public static final int MSG_ACTIVITY_TO_SERVICE_SETSETTINGS             = 10006;
+    public static final int MSG_SERVICE_TO_ACTIVITY_GETSETTINGS             = 10006;
+
+    public static final int MSG_ACTIVITY_TO_SERVICE_SETSETTINGS             = 10007;
 
 
     // MainActivity と Service で共通に用いるキー
