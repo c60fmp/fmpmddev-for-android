@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -16,6 +17,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.provider.DocumentsContract;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -25,7 +27,6 @@ import android.support.v4.media.session.PlaybackStateCompat;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.session.MediaButtonReceiver;
 import androidx.preference.PreferenceManager;
@@ -687,24 +688,48 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				uriString = uriString.substring(0, uriString.length() - 1);
 			}
 			Uri uri = Uri.parse(uriString);
-			DocumentFile documentFile = DocumentFile.fromTreeUri(this, uri);
-			List<DocumentFile> files = Arrays.asList(documentFile.listFiles());
-			if (files == null) {
-				return result;
-			}
 
-			for (DocumentFile f : files) {
-				if (f.isDirectory()) {
-					result.add(f.getUri().toString() + "/");
+			String[] projection = {
+					DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+					DocumentsContract.Document.COLUMN_MIME_TYPE,
+					DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+			};
 
-				} else if (DrivePath.getExtension(f.getName()).equalsIgnoreCase("zip")) {
-					result.add(f.getUri().toString() + "|");
+			Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, DocumentsContract.getDocumentId(uri));
+			Cursor cursor = getContentResolver()
+					.query(childrenUri, projection, null, null, null, null);
 
-				} else if (Arrays.asList(displayext).contains(DrivePath.getExtension(f.getName()).toLowerCase())) {
-					result.add(f.getUri().toString());
+			try {
+				if (cursor != null && cursor.moveToFirst()) {
+					do {
+						int nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+						int mimeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE);
+						int documentIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+
+						String documentId = cursor.getString(documentIdIndex);
+						Uri documentUri = DocumentsContract.buildDocumentUriUsingTree(uri, documentId);
+
+						String name = cursor.getString(nameIndex);
+						String mimeType = cursor.getString(mimeIndex);
+						boolean isDirectory = mimeType.compareTo(DocumentsContract.Document.MIME_TYPE_DIR) == 0;
+
+						if (isDirectory) {
+							result.add(documentUri.toString() + "/");
+
+						} else if (DrivePath.getExtension(name).equalsIgnoreCase("zip")) {
+							result.add(documentUri.toString() + "|");
+
+						} else if (Arrays.asList(displayext).contains(DrivePath.getExtension(name).toLowerCase())) {
+							result.add(documentUri.toString());
+						}
+
+					} while (cursor.moveToNext());
 				}
+			} finally {
+				cursor.close();
 			}
 		}
+
 		Collections.sort(result, new Comparator<String>() {
 			public int compare(String i1, String i2) {
 				CompareMediaID comparefiles = new CompareMediaID();
