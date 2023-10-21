@@ -107,9 +107,9 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         // ダイアログ表示用のデータ作成
         ExtDirItem[] extDirItem2 = new ExtDirItem[extDirItem.length + 1];
-        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), bundle.getString(KEY_LOCAL_ROOTDIRECTORY).replace("|", "/"));
+        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), DrivePath.getDisplayPath(bundle.getString(KEY_LOCAL_ROOTDIRECTORY)).replace("|", "/"));
         for(int i = 0; i < extDirItem.length; i++) {
-            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), extDirItem[i].getDirectory().replace("|", "/"));
+            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), DrivePath.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
         }
 
         adapter.addAll(extDirItem2);
@@ -194,9 +194,9 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         // ダイアログ表示用のデータ作成
         ExtDirItem[] extDirItem2 = new ExtDirItem[extDirItem.length + 1];
-        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), this.bundle.getString(KEY_LOCAL_ROOTDIRECTORY).replace("|", "/"));
+        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), DrivePath.getDisplayPath(this.bundle.getString(KEY_LOCAL_ROOTDIRECTORY)).replace("|", "/"));
         for(int i = 0; i < extDirItem.length; i++) {
-            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), extDirItem[i].getDirectory().replace("|", "/"));
+            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), DrivePath.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
         }
 
         adapter.addAll(extDirItem2);

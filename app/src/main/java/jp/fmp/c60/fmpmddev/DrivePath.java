@@ -1,9 +1,11 @@
 package jp.fmp.c60.fmpmddev;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
+import android.provider.DocumentsContract;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
@@ -196,6 +198,24 @@ public class DrivePath {
         }
         return mediaId.substring(e + 1);
 
+    }
+
+
+    public static String getDisplayPath(String contentPath) {
+        if(contentPath.endsWith("/") || contentPath.endsWith("|")) {
+            contentPath = contentPath.substring(0, contentPath.length() - 1);
+        }
+
+        // ToDo ドライブ名反映
+        if(contentPath.contains("|")) {
+            int zipend = contentPath.toLowerCase().indexOf(".zip|");
+            String zipfilename = contentPath.substring(0, zipend + 4);
+            String encodedfilename = contentPath.substring(zipend + 5);
+            return "/" + DocumentsContract.getDocumentId(Uri.parse(zipfilename)).replace(":", "/") + "/" + encodedfilename + "/";
+
+        } else {
+            return "/" + DocumentsContract.getDocumentId(Uri.parse(contentPath)).replace(":", "/") + "/";
+        }
     }
 }
 

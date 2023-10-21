@@ -2,9 +2,7 @@ package jp.fmp.c60.fmpmddev;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
@@ -212,23 +210,9 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
 
         // ListView の表示範囲を設定
         setTopItem(directory, getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID), children);
-        String tempDir = directory;
-        if(tempDir.endsWith("/") || tempDir.endsWith("|")) {
-           tempDir = tempDir.substring(0, tempDir.length() - 1);
-        }
 
         TextView textView = getView().findViewById(R.id.directoryname);
-
-        // ToDo ドライブ名反映
-        if(tempDir.contains("|")) {
-            int zipend = tempDir.toLowerCase().indexOf(".zip|");
-            String zipfilename = tempDir.substring(0, zipend + 4);
-            String encodedfilename = tempDir.substring(zipend + 5);
-            textView.setText("/" + DocumentsContract.getDocumentId(Uri.parse(zipfilename)).replace(":", "/") + "/" + encodedfilename + "/");
-
-        } else {
-            textView.setText("/" + DocumentsContract.getDocumentId(Uri.parse(tempDir)).replace(":", "/") + "/");
-        }
+        textView.setText(DrivePath.getDisplayPath(directory));
 
         this.bundle.putString(KEY_LOCAL_BROWSEDIRECTORY, directory);
         this.bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, (Serializable)children);
