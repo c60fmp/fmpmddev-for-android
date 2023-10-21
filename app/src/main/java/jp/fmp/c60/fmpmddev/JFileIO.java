@@ -133,9 +133,12 @@ public class JFileIO {
 		if(path == null) {
 			fullfilename = filename;
 		} else {
-			fullfilename = path + "%2F" + DrivePath.getFilename(filename);
+			if(path.endsWith("|")) {
+				fullfilename = path + DrivePath.getFilename(filename);
+			} else {
+				fullfilename = path.substring(0, path.length() - 1) + "%2F" + DrivePath.getFilename(filename);
+			}
 		}
-
 		return fullfilename;
 	}
 
@@ -204,7 +207,6 @@ public class JFileIO {
 
 		// for read only
 		if(isArchiveFile(fullfilename)) {
-
 			int zipend = fullfilename.toLowerCase().indexOf(".zip|");
 			String zipfilename = fullfilename.substring(0, zipend + 4);
 			String encodedfilename = fullfilename.substring(zipend + 5);

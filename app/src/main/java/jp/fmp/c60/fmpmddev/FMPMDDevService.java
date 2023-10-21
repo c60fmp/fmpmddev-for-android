@@ -340,14 +340,14 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// ToDo 要変更
 		extHashmap.clear();
-		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm");
-		extHashmap.put("ppc", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPC");
-		extHashmap.put("p86", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FP86");
-		extHashmap.put("pps", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPS");
-		extHashmap.put("pvi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPVI");
-		extHashmap.put("pzi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPZI");
-		extHashmap.put("pdx", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fmxdrv%2Fpdx");
-		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm");
+		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
+		extHashmap.put("ppc", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPC/");
+		extHashmap.put("p86", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FP86/");
+		extHashmap.put("pps", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPS/");
+		extHashmap.put("pvi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPVI/");
+		extHashmap.put("pzi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPZI/");
+		extHashmap.put("pdx", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fmxdrv%2Fpdx/");
+		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
 		rootDirectory = "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata/";
 		playDirectory = rootDirectory;
 	}
