@@ -1,10 +1,12 @@
 package jp.fmp.c60.fmpmddev;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,6 +26,7 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -115,12 +118,18 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY, browseDirectory);
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID, playFilename);
 
-				//@ ToDo for debug
-				if(rootDirectory == null || rootDirectory.isEmpty()) {
-					checkPermission();
-				} else {
-					startMediaBrowser();
+				Bundle lBundle = new Bundle();
+				lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, rootDirectory);
+
+				try {
+					Message msg2 = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY, 0, 0);
+					msg2.setData(lBundle);
+					serviceMessenger.send(msg2);
+				} catch(RemoteException e) {
+					e.printStackTrace();
 				}
+
+				startMediaBrowser();
 
 			} else if(msg.what == Common.MSG_SERVICE_TO_ACTIVITY_GETSETTINGS) {
 
@@ -169,13 +178,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		transaction.commit();
 
-		// ToDo startService を の onActivityResult の後に変更する
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			//@ startService(new Intent(this, FMPMDDevService.class));
-			startForegroundService(new Intent(this, FMPMDDevService.class));
-		} else {
-			startService(new Intent(this, FMPMDDevService.class));
-		}
+		checkPermission();
 	}
 
 
@@ -190,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	@Override
 	public void onStart() {
 		super.onStart();
-
 		setControlFragmentArguments(cBundle);
 
 		// permission を確認する
@@ -200,30 +202,17 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			checkPermission();
 		}
 		*/
-
-		// bind to the Service
-		Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
-		bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 	}
 
 
 	private void checkPermission() {
-		/*
 		// Check if the permission has been granted
 		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
 				== PackageManager.PERMISSION_GRANTED) {
 			// Permission is already available
-			startMediaBrowser();
+			startService();
 			return;
 		}
-
-		// Permission has not been granted and must be requested.
-		if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-			showPermissionError();
-		}
-
-		ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_READ_EXTERNAL_STORAGE);
-		*/
 
 		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 		// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
@@ -272,20 +261,10 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE && resultCode == Activity.RESULT_OK) {
 			Uri treeUri = resultData.getData();
 			getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-			Bundle lBundle = new Bundle();
 			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
-			lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, docFile.getUri().toString());
+			this.rootDirectory = docFile.getUri().toString();
 
-			try {
-				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY, 0, 0);
-				msg.setData(lBundle);
-				serviceMessenger.send(msg);
-			} catch(RemoteException e) {
-				e.printStackTrace();
-			}
-
-			startMediaBrowser();
+			startService();
 		}
 	}
 
@@ -301,6 +280,19 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	}
 	*/
 
+
+	private void startService() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			//@ startService(new Intent(this, FMPMDDevService.class));
+			startForegroundService(new Intent(this, FMPMDDevService.class));
+		} else {
+			startService(new Intent(this, FMPMDDevService.class));
+		}
+
+		// bind to the Service
+		Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
+		bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+	}
 
 	private void startMediaBrowser() {
 
