@@ -201,6 +201,21 @@ public class DrivePath {
     }
 
 
+    // 同一 tree か確認
+    public static boolean isSameTree(String parentDirectory, String childDirectory) {
+        if(parentDirectory.endsWith("/") || parentDirectory.endsWith("|")) {
+            parentDirectory = parentDirectory.substring(0, parentDirectory.length() - 1);
+        }
+
+        if(childDirectory.endsWith("/") || childDirectory.endsWith("|")) {
+            childDirectory = childDirectory.substring(0, childDirectory.length() - 1);
+        }
+
+        return DocumentsContract.getTreeDocumentId(Uri.parse(parentDirectory)).equals(DocumentsContract.getTreeDocumentId(Uri.parse(childDirectory)));
+    }
+
+
+    // content path から表示名を取得
     public static String getDisplayPath(String contentPath) {
         if(contentPath.endsWith("/") || contentPath.endsWith("|")) {
             contentPath = contentPath.substring(0, contentPath.length() - 1);

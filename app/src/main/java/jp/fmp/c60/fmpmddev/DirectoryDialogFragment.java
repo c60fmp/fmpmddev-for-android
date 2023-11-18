@@ -26,6 +26,8 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
     // DirectoryDialog Fragment Tag
     public static final String DIRECTORYDIALOG_FRAGMENT_TAG = "DirectoryDialogFragment";
 
+    private static final String KEY_LOCAL_ROOTDIRECTORY     = "localRootDirectory";
+
     private static final String KEY_LOCAL_EXTENSION         =  "localExtension";
 
     private static final String KEY_LOCAL_DIRECTORY         = "localDirectory";
@@ -65,6 +67,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
 
+        bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_ROOTDIRECTORY));
         bundle.putString(KEY_LOCAL_EXTENSION, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXT));
         bundle.putString(KEY_LOCAL_DIRECTORY, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY));
 
@@ -116,12 +119,13 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
     @Override
     public void onSubscribed() {
         Bundle lBundle = getArguments();
+        String rootDirectory = bundle.getString(KEY_LOCAL_ROOTDIRECTORY);
         String parentId = lBundle.getString(Common.KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY);
         bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, lBundle.getSerializable(Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN));
 
         adapter.clear();
 
-        if(!parentId.equals("/")) {
+        if (!parentId.equals(rootDirectory)) {
             adapter.add(getString(R.string.privious_directory));
         }
 
@@ -146,9 +150,10 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        String rootDirectory = bundle.getString(KEY_LOCAL_ROOTDIRECTORY);
         String directory = bundle.getString(KEY_LOCAL_DIRECTORY);
 
-        if(position == 0 && !directory.equals("/")) {
+        if(position == 0 && !directory.equals(rootDirectory)) {
             // 親ディレクトリに戻る
             directory = DrivePath.getParentDirectory(directory);
 
@@ -162,7 +167,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
         } else {
             List<MediaBrowserCompat.MediaItem> children = suppressAssign(bundle.getSerializable(KEY_LOCAL_SUBSCRIBECHILDREN));
             MediaBrowserCompat.MediaItem item;
-            if(directory.equals("/")) {
+            if(directory.equals(rootDirectory)) {
                 item = children.get(position);
             } else {
                 item = children.get(position - 1);

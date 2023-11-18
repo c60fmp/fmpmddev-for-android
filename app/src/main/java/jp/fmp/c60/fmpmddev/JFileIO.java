@@ -13,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -166,21 +167,24 @@ public class JFileIO {
 			String zipfilename = fullfilename.substring(0, zipend + 4);
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
-			try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)))) {
-				ZipEntry entry;
-				while ((entry = zipStream.getNextEntry()) != null) {
-					if(entry.isDirectory()) {
-						continue;
+			for(String charset : Common.CHARSET_STRING) {
+				try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)), Charset.forName(charset))) {
+					ZipEntry entry;
+					while ((entry = zipStream.getNextEntry()) != null) {
+						if (entry.isDirectory()) {
+							continue;
+						}
+
+						if (entry.getName().equals(encodedfilename)) {
+							//@ ToDo result == -1 になる不具合修正
+							result = entry.getSize();
+							return result;
+						}
 					}
 
-					if(entry.getName().equals(encodedfilename)) {
-						result = entry.getSize();
-						break;
-					}
+				} catch (IOException | IllegalArgumentException e) {
+					e.printStackTrace();
 				}
-
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 
 		} else {
@@ -211,30 +215,41 @@ public class JFileIO {
 			String zipfilename = fullfilename.substring(0, zipend + 4);
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
-			try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)))) {
-				ZipEntry entry;
-				while ((entry = zipStream.getNextEntry()) != null) {
-					if(entry.isDirectory()) {
-						continue;
+			for(String charset : Common.CHARSET_STRING) {
+				try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)), Charset.forName(charset))) {
+					ZipEntry entry;
+					while ((entry = zipStream.getNextEntry()) != null) {
+						if (entry.isDirectory()) {
+							continue;
+						}
+
+						if (entry.getName().equals(encodedfilename)) {
+							data = new byte[(int) entry.getSize()];
+
+							BufferedInputStream bufStream = new BufferedInputStream(zipStream);
+							bufStream.read(data);
+							filepointer = 0;
+							flags = Frags.flags_open.getInt();
+
+							return (flags == Frags.flags_open.getInt());
+						}
 					}
 
-					if(entry.getName().equals(encodedfilename)) {
-						data = new byte[(int)entry.getSize()];
-
-						BufferedInputStream bufStream = new BufferedInputStream(zipStream);
-						bufStream.read(data);
-						filepointer = 0;
-						flags = Frags.flags_open.getInt();
-					}
+				} catch (IOException | IllegalArgumentException e) {
+					e.printStackTrace();
 				}
-
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 
 		} else {
 			DocumentFile file = DocumentFile.fromSingleUri(context, Uri.parse(fullfilename));
 			int size = (int)file.length();
+
+			if(size <= 0) {
+				data = new byte[0];
+				filepointer = 0;
+				flags = 0;
+				return false;
+			}
 
 			try(InputStream stream = context.getContentResolver().openInputStream(Uri.parse(fullfilename))) {
 				data = new byte[size];

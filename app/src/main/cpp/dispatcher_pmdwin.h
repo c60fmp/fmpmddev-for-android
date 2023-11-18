@@ -31,7 +31,7 @@ public:
 	void getpcmdata(int16_t *buf, int nsamples);
 private:
 	const std::vector<const TCHAR*> supportedexts = {".m", ".m2", ".mz", ".mp", ".ms"};
-    const std::vector<const TCHAR*> supportedpcmexts = {".ppc", ".p86", ".pps", ".pvi", ".pzi", ".bin", ".wav"};
+    const std::vector<const TCHAR*> supportedpcmexts = {".ppc", ".p86", ".pps", ".pvi", ".pzi", ".wav"};
     PMDWIN* pmdwin;
 	PMDWIN* pmdwin2;
 	pthread_mutex_t mutex_pmdwin;

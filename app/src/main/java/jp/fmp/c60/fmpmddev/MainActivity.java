@@ -41,8 +41,15 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements ControlFragment.ControlFragmentListener, SettingDialogFragment.SettingDialogFragmentListener {
 
-	// 演奏中のファイル
-	private static final int PERMISSION_OPEN_DOCUMENT_TREE = 1;
+	private static final int PERMISSION_OPEN_DOCUMENT_TREE_CREATE = 1;
+	private static final int PERMISSION_OPEN_DOCUMENT_TREE_CHANGE = 2;
+
+	private static final String KEY_LOCAL_SERVICERUNNING = "ServiceRunning";
+
+	// Main Activity から呼び出す Callback
+	public interface MainActivityListener {
+		void onSetRootDirectory(Bundle bundle);
+	}
 
 	// ルートディレクトリ
 	private String rootDirectory;
@@ -55,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 	// controlFragment に渡す情報を入れる Bundle
 	private final Bundle cBundle = new Bundle();
+
+	// Service が起動されていれば true
+	private boolean serviceRunning = false;
 
 	// Service が bind されていれば true
 	private boolean bound = false;
@@ -78,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	private final ServiceConnection serviceConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder binder) {
+			bound = true;
 			// Service に初期値送付の指示
 			serviceMessenger = new Messenger(binder);
 			try {
@@ -87,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			} catch(RemoteException e) {
 				e.printStackTrace();
 			}
-			bound = true;
 		}
 
 		@Override
@@ -117,17 +127,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_ROOTDIRECTORY, rootDirectory);
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY, browseDirectory);
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID, playFilename);
-
-				Bundle lBundle = new Bundle();
-				lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, rootDirectory);
-
-				try {
-					Message msg2 = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY, 0, 0);
-					msg2.setData(lBundle);
-					serviceMessenger.send(msg2);
-				} catch(RemoteException e) {
-					e.printStackTrace();
-				}
 
 				startMediaBrowser();
 
@@ -165,6 +164,10 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		if(savedInstanceState != null) {
+			serviceRunning = savedInstanceState.getBoolean(KEY_LOCAL_SERVICERUNNING);
+		}
+
 		ActivityHandler activityHandler = new ActivityHandler(Looper.getMainLooper());
 		activityMessenger = new Messenger(activityHandler);
 
@@ -178,7 +181,9 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		transaction.commit();
 
-		checkPermission();
+		if(!serviceRunning) {
+			checkPermission();
+		}
 	}
 
 
@@ -195,13 +200,11 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		super.onStart();
 		setControlFragmentArguments(cBundle);
 
-		// permission を確認する
-		// ToDo for debug
-		/*
-		if(rootDirectory == null) {
-			checkPermission();
+		if(serviceRunning && !bound) {
+			// bind to the Service
+			Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
+			bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 		}
-		*/
 	}
 
 
@@ -214,80 +217,57 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			return;
 		}
 
-		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-		// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
-		// mdxRootUri = ActivitySelectMdxFile.getUriFromString("file://"+path);
-		// intent2.putExtra(DocumentsContract.EXTRA_INITIAL_URI, mdxRootUri);
-		startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE);
-
+		selectRootDirectory(true);
 	}
 
 
-	/*
-	@Override
-	public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-										   @NonNull int[] grantResults) {
-		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-			if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-				startMediaBrowser();
-			} else {
-				showPermissionError();
-			}
-
+	private void selectRootDirectory(boolean isCreate) {
+		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+		if(isCreate) {
+			startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE_CREATE);
 		} else {
-			if (requestCode != PERMISSION_REQUEST_READ_EXTERNAL_STORAGE) {
-				super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-			} else {
-				if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-					startMediaBrowser();
-
-				} else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-					showPermissionWarning();
-
-				} else {
-					showPermissionError();
-				}
-			}
+			startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE_CHANGE);
 		}
 	}
-	*/
 
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
 		super.onActivityResult(requestCode, resultCode, resultData);
-		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE && resultCode == Activity.RESULT_OK) {
+		if(resultCode != Activity.RESULT_OK) {
+			return;
+		}
+
+		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE || requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CHANGE) {
 			Uri treeUri = resultData.getData();
 			getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
-			this.rootDirectory = docFile.getUri().toString();
 
-			startService();
+			if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE) {
+				this.rootDirectory = docFile.getUri() + "/";
+				startService();
+
+			} else {
+				// settingDialogFragment に root directory を設定
+				SettingDialogFragment settingDialogFragment = (SettingDialogFragment)getSupportFragmentManager().findFragmentByTag(SettingDialogFragment.SETTINGDIALOG_FRAGMENT_TAG);
+				if(settingDialogFragment != null) {
+					Bundle lBundle = new Bundle();
+					lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, docFile.getUri() + "/");
+					setDirectoryDialogFragmentArguments(lBundle);
+					settingDialogFragment.onSetRootDirectory(lBundle);
+				}
+			}
 		}
 	}
-
-
-	/*
-	private void showPermissionError() {
-		Snackbar.make(findViewById(R.id.container), String.format("設定⇒アプリ⇒%sでストレージの権限を許可してください)", getString(R.string.app_name)), Snackbar.LENGTH_LONG).show();
-	}
-
-
-	private void showPermissionWarning() {
-		Snackbar.make(findViewById(R.id.container), "アプリを再起動しストレージの権限を取得してください", Snackbar.LENGTH_LONG).show();
-	}
-	*/
 
 
 	private void startService() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-			//@ startService(new Intent(this, FMPMDDevService.class));
 			startForegroundService(new Intent(this, FMPMDDevService.class));
 		} else {
 			startService(new Intent(this, FMPMDDevService.class));
 		}
+		serviceRunning = true;
 
 		// bind to the Service
 		Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
@@ -526,6 +506,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		if(controller == null || controller.getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING) {
 			stopService(new Intent(this, FMPMDDevService.class));
+			serviceRunning = false;
 		}
 		super.onDestroy();
 	}
@@ -542,6 +523,12 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		}
 	}
 
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putBoolean(KEY_LOCAL_SERVICERUNNING, serviceRunning);
+	}
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -627,8 +614,15 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		}
 	}
 
+	// SettingDialog で rootdirectory が押された時の処理
+	@Override
+	public void onSelectRootDirectory(Bundle bundle) {
+		selectRootDirectory(false);
+	}
 
-	// SettingDialog で「OK」が押された時の処理
+
+
+		// SettingDialog で「OK」が押された時の処理
 	@Override
 	public void onDialogPositiveClick(Bundle bundle) {
 
@@ -654,7 +648,10 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		}
 
 		if(rootDirectoryChanged) {
-			Snackbar.make(findViewById(R.id.container), "root directory が変更されました。再起動してください", Snackbar.LENGTH_LONG).show();
+			// キャッシュをクリアし、root directory を browse する
+			mediaItemHashmap.clear();
+			lBundle.putString(Common.KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY, rootDirectory);
+			subscribeCache(lBundle);
 		}
 	}
 

@@ -71,6 +71,8 @@ public class Common {
 
     public static final String KEY_DIRECTORY_TO_ACTIVITY_BROWSEDIRECTORY    = "directoryToActivityBrowseDirectory";
 
+    public static final String KEY_SETTING_TO_DIRECTORY_ROOTDIRECTORY       = "settingToDirectoryRootDirectory";
+
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXT              = "settingToDirectoryPCMExt";
 
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY     = "settingToDirectoryPCMExtDirectory";
@@ -78,4 +80,7 @@ public class Common {
     public static final String KEY_DIRECTORY_TO_SETTING_PCMEXT              = "directoryToSettingPCMExt";
 
     public static final String KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY     = "directoryToSettingPCMExtDirectory";
+
+    public static final String[] CHARSET_STRING = {"UTF-8", "MS932"};
+
 }

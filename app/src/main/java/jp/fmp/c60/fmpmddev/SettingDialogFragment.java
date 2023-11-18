@@ -59,6 +59,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
     // Setting Dialog Fragment から呼び出す Callback
     public interface SettingDialogFragmentListener {
+        void onSelectRootDirectory(Bundle bundle);
         void onDialogPositiveClick(Bundle bundle);
     }
 
@@ -105,14 +106,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
         // ListView に表示するデータ
         ExtDirItem[] extDirItem = (ExtDirItem[])(bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
 
-        // ダイアログ表示用のデータ作成
-        ExtDirItem[] extDirItem2 = new ExtDirItem[extDirItem.length + 1];
-        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), DrivePath.getDisplayPath(bundle.getString(KEY_LOCAL_ROOTDIRECTORY)).replace("|", "/"));
-        for(int i = 0; i < extDirItem.length; i++) {
-            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), DrivePath.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
-        }
-
-        adapter.addAll(extDirItem2);
+        setAdapterData();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder
@@ -154,23 +148,27 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         if(position == 0) {
             // root directory
-            extension = getString(R.string.root_directory_name);
-            directory = bundle.getString(KEY_LOCAL_ROOTDIRECTORY);
+            Bundle lBundle = new Bundle();
+            lBundle.putString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
+            listener.onSelectRootDirectory(bundle);
+
         } else {
             extension = extDirItem[position - 1].getExtension();
             directory = extDirItem[position - 1].getDirectory();
+
+            Bundle lBundle = new Bundle();
+
+            lBundle.putString(Common.KEY_SETTING_TO_DIRECTORY_ROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
+            lBundle.putString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXT, extension);
+            lBundle.putString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY, directory);
+
+            //　ダイアログを開く
+            DialogFragment directoryDialogFragment = new DirectoryDialogFragment();
+            directoryDialogFragment.setArguments(lBundle);
+
+            directoryDialogFragment.setTargetFragment(SettingDialogFragment.this, 0);
+            directoryDialogFragment.show(getActivity().getSupportFragmentManager(), DirectoryDialogFragment.DIRECTORYDIALOG_FRAGMENT_TAG);
         }
-
-        Bundle lBundle = new Bundle();
-        lBundle.putString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXT, extension);
-        lBundle.putString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY, directory);
-
-        //　ダイアログを開く
-        DialogFragment directoryDialogFragment = new DirectoryDialogFragment();
-        directoryDialogFragment.setArguments(lBundle);
-
-        directoryDialogFragment.setTargetFragment(SettingDialogFragment.this, 0);
-        directoryDialogFragment.show(getActivity().getSupportFragmentManager(), DirectoryDialogFragment.DIRECTORYDIALOG_FRAGMENT_TAG);
     }
 
 
@@ -190,7 +188,40 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
             }
         }
 
-        adapter.clear();
+        setAdapterData();
+    }
+
+
+    public void onSetRootDirectory(Bundle lBundle) {
+        bundle.putString(KEY_LOCAL_ROOTDIRECTORY, lBundle.getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
+
+        // PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
+        ExtDirItem[] extDirItem = (ExtDirItem[])(bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+        for(int i = 0; i < extDirItem.length; i++) {
+            if(!DrivePath.isSameTree(bundle.getString(KEY_LOCAL_ROOTDIRECTORY), extDirItem[i].getDirectory())) {
+                extDirItem[i].setDirectory(bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
+            }
+        }
+
+        setAdapterData();
+    }
+
+
+    public void setAdapterData() {
+        String extension = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT);
+        String directory = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY);
+
+        ExtDirItem[] extDirItem = (ExtDirItem[])(this.bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+        if(extension != null && extension.equals(getString(R.string.root_directory_name))) {
+            this.bundle.putString(KEY_LOCAL_ROOTDIRECTORY, directory);
+
+        } else {
+            for (ExtDirItem edi : extDirItem) {
+                if (edi.getExtension().equals(extension)) {
+                    edi.setDirectory(directory);
+                }
+            }
+        }
 
         // ダイアログ表示用のデータ作成
         ExtDirItem[] extDirItem2 = new ExtDirItem[extDirItem.length + 1];
@@ -199,6 +230,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
             extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), DrivePath.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
         }
 
+        adapter.clear();
         adapter.addAll(extDirItem2);
         adapter.notifyDataSetChanged();
     }

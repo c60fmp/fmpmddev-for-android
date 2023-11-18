@@ -34,6 +34,7 @@ import androidx.preference.PreferenceManager;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,7 +58,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private static final String KEY_PREFERENCE_ROOTDIRECTORY = "RootDirectory";
 
 	private static final String KEY_PREFERENCE_PLAYMEDIAID = "PlayMediaID";
-
 
 	// ログ用タグ
 	private final String TAG_SERVICE = FMPMDDevService.class.getSimpleName();
@@ -145,11 +145,19 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY) {
-				// Root Directory の設定、PCMディレクトリの初期化
+				// Root Directory の設定
 				service.rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
-				service.playDirectory = service.rootDirectory;
+
+				// play ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
+				if(!DrivePath.isSameTree(service.rootDirectory, service.playDirectory)) {
+					service.playDirectory = service.rootDirectory;
+				}
+
+				// PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
 				for (String key : service.extHashmap.keySet()) {
-					service.extHashmap.put(key, service.rootDirectory);
+					if (!DrivePath.isSameTree(service.rootDirectory, service.extHashmap.get(key))) {
+						service.extHashmap.put(key, service.rootDirectory);
+					}
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
@@ -338,6 +346,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			displayext[i] = displayext[i].replace(".", "");
 		}
 
+		/*
 		// ToDo 要変更
 		extHashmap.clear();
 		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
@@ -350,6 +359,8 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
 		rootDirectory = "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata/";
 		playDirectory = rootDirectory;
+
+		*/
 	}
 
 
@@ -658,26 +669,29 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			int zipend = uriString.toLowerCase().indexOf(".zip|");
 			String zipfilename = uriString.substring(0, zipend + 4);
 
-			try(ZipInputStream zipStream = new ZipInputStream(getContentResolver().openInputStream(Uri.parse(zipfilename)))) {
-				ZipEntry entry;
-				while ((entry = zipStream.getNextEntry()) != null) {
-					if (entry.isDirectory()) {
-						String resultparentdirectory = DrivePath.getParentDirectory(DrivePath.getDirectory(zipfilename + "|" + entry.getName()));
-						if (uriString.equals(resultparentdirectory)) {
-							result.add(zipfilename + "|" + entry.getName());
-						}
+			for(String charset : Common.CHARSET_STRING){
+				result.clear();
+				try (ZipInputStream zipStream = new ZipInputStream(getContentResolver().openInputStream(Uri.parse(zipfilename)), Charset.forName(charset))) {
+					ZipEntry entry;
+					while ((entry = zipStream.getNextEntry()) != null) {
+						if (entry.isDirectory()) {
+							String resultparentdirectory = DrivePath.getParentDirectory(DrivePath.getDirectory(zipfilename + "|" + entry.getName()));
+							if (uriString.equals(resultparentdirectory)) {
+								result.add(zipfilename + "|" + entry.getName());
+							}
 
 //					} else if (!DrivePath.getExtension(entry.getName()).equalsIgnoreCase("zip")) {
-					} else if(Arrays.asList(displayext).contains(DrivePath.getExtension(entry.getName()).toLowerCase())) {
-						String resultdirectory = DrivePath.getDirectory(zipfilename + "|" + entry.getName());
-						if (uriString.equals(resultdirectory)) {
-							result.add(zipfilename + "|" + entry.getName());
+						} else if (Arrays.asList(displayext).contains(DrivePath.getExtension(entry.getName()).toLowerCase())) {
+							String resultdirectory = DrivePath.getDirectory(zipfilename + "|" + entry.getName());
+							if (uriString.equals(resultdirectory)) {
+								result.add(zipfilename + "|" + entry.getName());
+							}
 						}
 					}
-				}
 
-			} catch (IOException e) {
-				e.printStackTrace();
+				} catch (IOException | IllegalArgumentException e) {
+					e.printStackTrace();
+				}
 			}
 
 		} else {
