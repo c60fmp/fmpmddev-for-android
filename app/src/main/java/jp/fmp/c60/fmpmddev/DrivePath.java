@@ -203,15 +203,22 @@ public class DrivePath {
 
     // 同一 tree か確認
     public static boolean isSameTree(String parentDirectory, String childDirectory) {
-        if(parentDirectory.endsWith("/") || parentDirectory.endsWith("|")) {
+        if((parentDirectory.endsWith("/") || parentDirectory.endsWith("|")) && parentDirectory.length() > 1) {
             parentDirectory = parentDirectory.substring(0, parentDirectory.length() - 1);
         }
 
-        if(childDirectory.endsWith("/") || childDirectory.endsWith("|")) {
+        if((childDirectory.endsWith("/") || childDirectory.endsWith("|")) && childDirectory.length() > 1) {
             childDirectory = childDirectory.substring(0, childDirectory.length() - 1);
         }
 
-        return DocumentsContract.getTreeDocumentId(Uri.parse(parentDirectory)).equals(DocumentsContract.getTreeDocumentId(Uri.parse(childDirectory)));
+        boolean result = false;
+        try {
+            result = DocumentsContract.getTreeDocumentId(Uri.parse(parentDirectory)).equals(DocumentsContract.getTreeDocumentId(Uri.parse(childDirectory)));
+
+        } catch(IllegalArgumentException e) {
+        }
+
+        return result;
     }
 
 
@@ -221,7 +228,6 @@ public class DrivePath {
             contentPath = contentPath.substring(0, contentPath.length() - 1);
         }
 
-        // ToDo ドライブ名反映
         if(contentPath.contains("|")) {
             int zipend = contentPath.toLowerCase().indexOf(".zip|");
             String zipfilename = contentPath.substring(0, zipend + 4);

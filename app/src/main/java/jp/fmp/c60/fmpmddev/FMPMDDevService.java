@@ -120,7 +120,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private int playMusicNum = 0;
 
 	// Activity から呼び出された情報を処理する Handler
-	static class ServiceHandler extends Handler {
+	class ServiceHandler extends Handler {
 		FMPMDDevService service;
 
 		ServiceHandler(FMPMDDevService service) {
@@ -130,6 +130,33 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_INIT) {
+				// Root Directory の設定(設定されている場合
+				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+
+				service.jfileio = new JFileIO(service.extHashmap, service);
+				service.dispatcher.init(service.jfileio);
+
+				// 曲数をカウント＆キューに追加
+				service.playMusicList = service.getMediaItems(service.playDirectory);
+				service.setqueue(service.playMusicList);
+
+				// 一定周期で再生情報を更新
+				service.handler.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						service.UpdatePlaybackState();
+
+						// 再生終了時に次の曲に
+						if (service.dispatcher.getpos() > service.musiclength) {
+							service.skiptonext();
+						}
+
+						//再度実行
+						service.handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
+					}
+				}, UPDATE_NOTIFICATION_INTERVAL);
+
+
 				// Activity に初期値を返す
 				try {
 					Message msg2 = Message.obtain(null, Common.MSG_SERVICE_TO_ACTIVITY_INIT, 0, 0);
@@ -145,20 +172,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY) {
-				// Root Directory の設定
-				service.rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
-
-				// play ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
-				if(!DrivePath.isSameTree(service.rootDirectory, service.playDirectory)) {
-					service.playDirectory = service.rootDirectory;
-				}
-
-				// PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
-				for (String key : service.extHashmap.keySet()) {
-					if (!DrivePath.isSameTree(service.rootDirectory, service.extHashmap.get(key))) {
-						service.extHashmap.put(key, service.rootDirectory);
-					}
-				}
+				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
 				// 起動時、前回終了時の曲を再生する
@@ -224,10 +238,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		dispatcher = new Dispatcher();
 		initialize();
 
-		jfileio = new JFileIO(null, this);
-		jfileio.SetPath(extHashmap);
-		dispatcher.init(jfileio);
-
 		handler.removeCallbacksAndMessages(null);
 
 		audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -260,26 +270,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				UpdateNotification();
 			}
 		});
-
-		// 曲数をカウント＆キューに追加
-		playMusicList = getMediaItems(playDirectory);
-		setqueue(playMusicList);
-
-		// 一定周期で再生情報を更新
-		handler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				UpdatePlaybackState();
-
-				// 再生終了時に次の曲に
-				if (dispatcher.getpos() > musiclength) {
-					FMPMDDevService.this.skiptonext();
-				}
-
-				//再度実行
-				handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
-			}
-		}, UPDATE_NOTIFICATION_INTERVAL);
 	}
 
 
@@ -345,22 +335,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		for (int i = 0; i < displayext.length; i++) {
 			displayext[i] = displayext[i].replace(".", "");
 		}
-
-		/*
-		// ToDo 要変更
-		extHashmap.clear();
-		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
-		extHashmap.put("ppc", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPC/");
-		extHashmap.put("p86", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FP86/");
-		extHashmap.put("pps", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fpmd%2FPPS/");
-		extHashmap.put("pvi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPVI/");
-		extHashmap.put("pzi", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2FPZI/");
-		extHashmap.put("pdx", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Fmxdrv%2Fpdx/");
-		extHashmap.put("wav", "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata%2Ffmp%2Frhythm/");
-		rootDirectory = "content://com.android.externalstorage.documents/tree/3333-3838%3Adata/document/3333-3838%3Adata/";
-		playDirectory = rootDirectory;
-
-		*/
 	}
 
 
@@ -385,6 +359,23 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		editor.putString(KEY_PREFERENCE_ROOTDIRECTORY, rootDirectory);
 		editor.putString(KEY_PREFERENCE_PLAYMEDIAID, playFilename);
 		editor.apply();
+	}
+
+	private void setRootDirectory(String rootDirectory) {
+		// Root Directory の設定
+		this.rootDirectory = rootDirectory;
+
+		// play ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
+		if(!DrivePath.isSameTree(rootDirectory, playDirectory)) {
+			playDirectory = rootDirectory;
+		}
+
+		// PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
+		for (String key : extHashmap.keySet()) {
+			if (!DrivePath.isSameTree(rootDirectory, extHashmap.get(key))) {
+				extHashmap.put(key, rootDirectory);
+			}
+		}		
 	}
 
 
@@ -1034,7 +1025,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			mediaId2 = DrivePath.getDirectory(mediaId);
 		}
 
-		// ToDo 要デバッグ
 		// rootDirectory、または、ドライブに到達したときの処理
 		if (mediaId2.equals(rootDirectory) || DrivePath.getDrive(getApplicationContext()).containsKey(mediaId2)) {
 			files = listFiles(mediaId2);
@@ -1173,7 +1163,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			mediaId2 = DrivePath.getDirectory(mediaId);
 		}
 
-		// ToDo 要デバッグ
 		// rootDirectory、または、ドライブに到達したときの処理
 		if (mediaId2.equals(rootDirectory) || DrivePath.getDrive(getApplicationContext()).containsKey(mediaId2)) {
 			files = listFiles(mediaId2);

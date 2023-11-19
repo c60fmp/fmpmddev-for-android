@@ -92,9 +92,14 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			// Service に初期値送付の指示
 			serviceMessenger = new Messenger(binder);
 			try {
+				Bundle lBundle = new Bundle();
+				lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, rootDirectory);
+
 				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_INIT, 0, 0);
+				msg.setData(lBundle);
 				msg.replyTo = activityMessenger;
 				serviceMessenger.send(msg);
+
 			} catch(RemoteException e) {
 				e.printStackTrace();
 			}
