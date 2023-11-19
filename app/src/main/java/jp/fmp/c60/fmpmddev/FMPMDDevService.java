@@ -130,32 +130,42 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		@Override
 		public void handleMessage(Message msg) {
 			if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_INIT) {
-				// Root Directory の設定(設定されている場合
-				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+				// 初回起動(dispatcher == null) の時のみ、初期化実施
+				if(dispatcher == null) {
+					dispatcher = new Dispatcher();
+					initialize();
 
-				service.jfileio = new JFileIO(service.extHashmap, service);
-				service.dispatcher.init(service.jfileio);
+					// Root Directory の設定(設定されている場合)
+					setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+					// playFilename = "";
 
-				// 曲数をカウント＆キューに追加
-				service.playMusicList = service.getMediaItems(service.playDirectory);
-				service.setqueue(service.playMusicList);
+					service.jfileio = new JFileIO(service.extHashmap, service);
+					service.dispatcher.init(service.jfileio);
 
-				// 一定周期で再生情報を更新
-				service.handler.postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						service.UpdatePlaybackState();
+					// 曲数をカウント＆キューに追加
+					service.playMusicList = service.getMediaItems(service.playDirectory);
+					service.setqueue(service.playMusicList);
 
-						// 再生終了時に次の曲に
-						if (service.dispatcher.getpos() > service.musiclength) {
-							service.skiptonext();
+					// 一定周期で再生情報を更新
+					service.handler.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							service.UpdatePlaybackState();
+
+							// 再生終了時に次の曲に
+							if (service.dispatcher.getpos() > service.musiclength) {
+								service.skiptonext();
+							}
+
+							//再度実行
+							service.handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
 						}
+					}, UPDATE_NOTIFICATION_INTERVAL);
 
-						//再度実行
-						service.handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
-					}
-				}, UPDATE_NOTIFICATION_INTERVAL);
-
+				} else {
+					// Root Directory の設定(設定されている場合)
+					setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+				}
 
 				// Activity に初期値を返す
 				try {
@@ -173,6 +183,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY) {
 				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+				playFilename = "";
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
 				// 起動時、前回終了時の曲を再生する
@@ -234,9 +245,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			afr = builder.build();
 		}
-
-		dispatcher = new Dispatcher();
-		initialize();
 
 		handler.removeCallbacksAndMessages(null);
 
@@ -320,7 +328,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		playFilename = prefer.getString(KEY_PREFERENCE_PLAYMEDIAID, "");
 		// ToDo 暫定
-		playFilename = "";
+		//@ playFilename = "";
 
 		if (playFilename.isEmpty()) {
 			playDirectory = rootDirectory;
@@ -362,6 +370,10 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	}
 
 	private void setRootDirectory(String rootDirectory) {
+		if(rootDirectory == null) {
+			return;
+		}
+
 		// Root Directory の設定
 		this.rootDirectory = rootDirectory;
 

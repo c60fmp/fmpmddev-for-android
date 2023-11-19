@@ -429,8 +429,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			lBundle.putString(Common.KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY, browseDirectory);
 			subscribeCache(lBundle);
 
-			//@ ToDo 無効化
-			/*
 			// 前回終了時の曲の再生を指示
 			try {
 				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS, 0, 0);
@@ -438,7 +436,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			} catch(RemoteException e) {
 				e.printStackTrace();
 			}
-			*/
 		}
 
 
