@@ -332,8 +332,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getlen
             }
 
             if(flag) {
-                fader->setdispatcher(m);
-                result = fader->getlength(const_cast<TCHAR *>(cfilename), &length2, &loop2);
+                result = m->getlength(const_cast<TCHAR *>(cfilename), &length2, &loop2);
                 if(result) {
                     break;
                 }

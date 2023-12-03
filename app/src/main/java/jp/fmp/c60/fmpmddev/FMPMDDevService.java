@@ -327,8 +327,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		}
 
 		playFilename = prefer.getString(KEY_PREFERENCE_PLAYMEDIAID, "");
-		// ToDo 暫定
-		//@ playFilename = "";
 
 		if (playFilename.isEmpty()) {
 			playDirectory = rootDirectory;
