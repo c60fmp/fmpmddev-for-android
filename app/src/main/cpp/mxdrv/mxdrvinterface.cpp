@@ -2,6 +2,8 @@
 #include <algorithm>
 #include "mxdrvinterface.h"
 #include "mdx_util.h"
+#include "sjis2utf.h"
+#include "util.h"
 
 
 MXDRVInterface::MXDRVInterface()
@@ -202,6 +204,17 @@ int MXDRVInterface::getpos(void) {
 
 void MXDRVInterface::setpos(int pos) {
 	mxdrv->MXDRV_PlayAt(pos, 1, 0);
+}
+
+
+uint8_t * MXDRVInterface::gettitle(uint8_t *dest, TCHAR *mdxfilename) {
+    int result = LoadMDXSub(mdxfilename, false);
+    if(result == 0 || result == 3) {
+		uint8_t dest2[MAX_LOADSTRING] = {};
+		delesc(reinterpret_cast<char *>(dest2), mdxtitle);
+        sjis2utf8(dest, dest2);
+    }
+    return dest;
 }
 
 

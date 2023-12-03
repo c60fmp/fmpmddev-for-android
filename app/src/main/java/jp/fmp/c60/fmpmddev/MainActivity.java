@@ -279,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 	}
 
+
 	private void startMediaBrowser() {
 
 		if (browser == null) {
@@ -468,6 +469,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			playFilename = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
 			cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY, browseDirectory);
 			cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID, playFilename);
+			cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYTITLE, metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
 
 			if(metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION) > 0) {
 				int maxLength = (int)metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
@@ -616,6 +618,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		}
 	}
 
+
 	// SettingDialog で rootdirectory が押された時の処理
 	@Override
 	public void onSelectRootDirectory(Bundle bundle) {
@@ -623,8 +626,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	}
 
 
-
-		// SettingDialog で「OK」が押された時の処理
+	// SettingDialog で「OK」が押された時の処理
 	@Override
 	public void onDialogPositiveClick(Bundle bundle) {
 

@@ -30,6 +30,7 @@ public:
 	int getlength(const TCHAR* mdxfilename, int* length);
 	int getpos(void);
 	void setpos(int pos);
+    uint8_t* gettitle(uint8_t *dest, TCHAR *mdxfilename);
 
 	int getpcm(int16_t* buf, int len);
 

@@ -15,6 +15,7 @@
 
 typedef char TCHAR;
 
+const size_t TITLE_BUFFER_SIZE = 1024 + 16;
 
 struct IDISPATCHER {
 	virtual bool init(IFILEIO* fileio) = 0;
@@ -24,6 +25,7 @@ struct IDISPATCHER {
 	virtual void music_start(void) = 0;
 	virtual void music_stop(void) = 0;
 	virtual bool getlength(TCHAR *filename, int *length, int *loop) = 0;
+	virtual uint8_t * gettitle(uint8_t *dest, TCHAR *filename) = 0;
 	virtual int getpos(void) = 0;
 	virtual void setpos(int pos) = 0;
 	virtual void getpcmdata(int16_t *buf, int nsamples) = 0;

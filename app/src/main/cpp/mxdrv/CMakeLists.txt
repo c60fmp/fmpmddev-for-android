@@ -12,6 +12,7 @@ add_library( # Sets the name of the library.
         mdx_util.c
         file_opna.cpp
         sjis2utf.cpp
+        util.cpp
 )
 
 target_include_directories(

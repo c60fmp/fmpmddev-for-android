@@ -196,9 +196,17 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             if (children != null) {
                 for (MediaBrowserCompat.MediaItem child : children) {
                     if (child.isBrowsable()) {
-                        adapter.add(child.getDescription().getTitle() + File.separator);
+                        /*
+                        String mediaId = Uri.decode(child.getDescription().getMediaId());
+                        int length = mediaId.length();
+                        String mediaId2 = mediaId.substring(0, length - 1);
+                        int lastseparator = mediaId2.lastIndexOf("/");
+                        String mediaId3 = mediaId.substring(lastseparator + 1);
+                        adapter.add(mediaId3);
+                        */
+                        adapter.add((String)child.getDescription().getTitle() + File.separator);
                     } else {
-                        adapter.add((String) child.getDescription().getTitle());
+                        adapter.add(DrivePath.getFilename(child.getDescription().getMediaId()));
                     }
                 }
             }
@@ -221,6 +229,11 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
 
     // 曲を更新
     public void updateMusic() {
+        TextView textView = getView().findViewById(R.id.title_textview);
+        if(textView != null) {
+            textView.setText(getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYTITLE));
+        }
+
         SeekBar seekBar = getView().findViewById(R.id.seekBar);
         seekBar.setMax(getArguments().getInt(Common.KEY_ACTIVITY_TO_CONTROL_MUSICLENGTH));
         setTime(R.id.totaltime_textview, getArguments().getInt(Common.KEY_ACTIVITY_TO_CONTROL_MUSICLENGTH));

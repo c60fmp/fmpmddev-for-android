@@ -32,6 +32,7 @@ public:
     void music_start(void);
     void music_stop(void);
     bool getlength(TCHAR *filename, int *length, int *loop);
+    uint8_t * gettitle(uint8_t *dest, TCHAR *filename);
     int getpos(void);
     void setpos(int pos);
     void getpcmdata(int16_t *buf, int nsamples);

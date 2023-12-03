@@ -9,6 +9,7 @@
 
 #include <pthread.h>
 #include "dispatcher_pmdwin.h"
+#include "sjis2utf.h"
 
 
 //=============================================================================
@@ -143,6 +144,19 @@ void DISPATCHER_PMDWIN::music_stop(void)
 bool DISPATCHER_PMDWIN::getlength(TCHAR *filename, int *length, int *loop)
 {
 	return pmdwin2->getlength(filename, length, loop);
+}
+
+
+//=============================================================================
+//	Title取得
+//=============================================================================
+uint8_t * DISPATCHER_PMDWIN::gettitle(uint8_t *dest, TCHAR *filename)
+{
+	char dest2[1024+16];
+	pmdwin2->fgetmemo3(dest2, filename, 1);
+
+	sjis2utf8(dest, (uint8_t *)dest2);
+	return dest;
 }
 
 

@@ -39,6 +39,8 @@ public class Common {
 
     public static final String KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID          = "activityToControlPlayMediaID";
 
+    public static final String KEY_ACTIVITY_TO_CONTROL_PLAYTITLE          = "activityToControlPlayTitle";
+
     public static final String KEY_ACTIVITY_TO_CONTROL_MUSICLENGTH          = "activityToControlMusicLength";
 
     public static final String KEY_ACTIVITY_TO_CONTROL_MUSICPROGRESS        = "activityToControlMusicProgress";

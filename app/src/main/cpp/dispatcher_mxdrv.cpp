@@ -134,6 +134,16 @@ bool DISPATCHER_MXDRV::getlength(TCHAR *filename, int *length, int *loop)
 
 
 //=============================================================================
+//	Title取得
+//=============================================================================
+uint8_t * DISPATCHER_MXDRV::gettitle(uint8_t *dest, TCHAR *filename)
+{
+    mxdrvinterface_2->gettitle(dest, filename);
+	return dest;
+}
+
+
+//=============================================================================
 //	再生位置の取得(pos : ms)
 //=============================================================================
 int DISPATCHER_MXDRV::getpos(void)

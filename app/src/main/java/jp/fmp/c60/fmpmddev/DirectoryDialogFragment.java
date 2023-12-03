@@ -142,7 +142,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
         }
 
         TextView textView = getDialog().findViewById(R.id.directoryname_directorydialog);
-        textView.setText(DrivePath.getDisplayPath(directory).replace("|", "/"));
+        textView.setText(DrivePath.getDisplayPath(directory));
 
         adapter.notifyDataSetChanged();
     }

@@ -18,7 +18,7 @@
 #include "openslpcm.h"
 #include "openslpcmevent.h"
 #include "file_opna.h"
-#include <android/log.h>
+#include "sjis2utf.h"
 
 
 std::vector<IDISPATCHER*> dispatchermanager;
@@ -352,6 +352,44 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getlen
 
 
 //=============================================================================
+//	Title取得
+// ============================================================================
+
+extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz,
+                                            jobject jfileio, jstring filename) {
+    uint8_t dest[TITLE_BUFFER_SIZE] = {};
+
+    if (fileio != NULL && fader != NULL) {
+        fileio->SetObj(env, jfileio);
+
+        const TCHAR *cfilename = env->GetStringUTFChars(filename, NULL);
+        FilePath    filepath;
+        TCHAR ext[_MAX_PATH];
+        filepath.Extractpath(ext, cfilename, filepath.extractpath_ext);
+
+        for(auto& m :dispatchermanager) {
+            auto e = m->supportedext();
+
+            bool flag = false;
+            for(auto& it : e) {
+                if(filepath.Stricmp(ext, it) == 0) {
+                    flag = true;
+                    break;
+                }
+            }
+
+            if(flag) {
+                m->gettitle(dest, const_cast<TCHAR *>(cfilename));
+            }
+        }
+        env->ReleaseStringUTFChars(filename, cfilename);
+    }
+
+    return env->NewStringUTF(reinterpret_cast<const char *>(dest));
+}
+
+
+//=============================================================================
 //	pause(toggle)
 //=============================================================================
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_pause(JNIEnv *env, jobject thiz)
@@ -386,7 +424,7 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_resume(JNI
 
 //=============================================================================
 //	Status取得
-// =============================================================================
+// ============================================================================
 extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getstatus(JNIEnv *env, jobject thiz) {
     jint result = OpenSLPCM::STATUS_NONE;
     if(openslpcm !=  NULL) {

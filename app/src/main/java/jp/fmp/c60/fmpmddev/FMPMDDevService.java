@@ -805,9 +805,12 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				continue;
 			}
 
+			// タイトルを取得
+			String title = dispatcher.gettitle(jfileio, s);
+
 			MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
 					.setMediaId(s)
-					.setTitle(Uri.decode(DrivePath.getFilename(s)));
+					.setTitle(title);
 			MediaDescriptionCompat mediadescription = descriptionBuilder.build();
 
 			result.add(new MediaBrowserCompat.MediaItem(mediadescription, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));

@@ -46,6 +46,7 @@ public class Dispatcher {
 
 	public native void fadeout2(int speed);
 	public native boolean getlength(JFileIO jfileio, String filename, MutableInt length, MutableInt loop);
+	public native String gettitle(JFileIO jfileio, String filename);
 	public native void setpos(int pos);
 	public native int getpos();
 
