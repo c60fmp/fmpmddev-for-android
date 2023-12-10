@@ -2,6 +2,7 @@ package jp.fmp.c60.fmpmddev;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -198,7 +199,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
                     if (child.isBrowsable()) {
                         adapter.add((String)child.getDescription().getTitle() + File.separator);
                     } else {
-                        adapter.add(DrivePath.getFilename(child.getDescription().getMediaId()));
+                        adapter.add(DrivePath.getFilename(Uri.decode(child.getDescription().getMediaId())));
                     }
                 }
             }
