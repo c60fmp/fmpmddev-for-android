@@ -189,8 +189,11 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				// 起動時、前回終了時の曲を再生する
 				if (!service.playFilename.isEmpty()) {
 					// 演奏中でなければ前回終了時の曲を再生する
-					if(service.mediaSession.getController().getPlaybackState() == null || service.mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING) {
+					if(service.mediaSession.getController().getPlaybackState() == null ||
+							service.mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING &&
+							service.mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PAUSED) {
 						service.music_load(service.playFilename);
+
 					} else {
 						// 演奏中なら曲データを配信
 						service.setMusicMetadata();
