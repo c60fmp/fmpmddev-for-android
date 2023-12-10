@@ -647,15 +647,13 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS, 0, 0);
 			msg.setData(lBundle);
 			serviceMessenger.send(msg);
+
 		} catch(RemoteException e) {
 			e.printStackTrace();
 		}
 
 		if(rootDirectoryChanged) {
-			// キャッシュをクリアし、root directory を browse する
-			mediaItemHashmap.clear();
-			lBundle.putString(Common.KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY, rootDirectory);
-			subscribeCache(lBundle);
+			Snackbar.make(findViewById(R.id.container), R.string.snackbar_restart, Snackbar.LENGTH_LONG).show();
 		}
 	}
 

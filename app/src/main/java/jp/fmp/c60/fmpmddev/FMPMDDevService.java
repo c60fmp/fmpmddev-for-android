@@ -216,12 +216,16 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS) {
 				// Activity で設定された PCM 等のディレクトリを Dispatcher 等に設定する
-				service.rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
 				service.extHashmap = service.suppressAssign(msg.getData().getSerializable(Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY));
 				service.jfileio.SetPath(service.extHashmap);
 				service.dispatcher.init(service.jfileio);
-				service.savePlayDirectory();
 				service.savePcmDirectory();
+
+				service.pause();
+				service.rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
+				service.playDirectory = service.rootDirectory;
+				service.playFilename = "";
+				service.savePlayDirectory();
 
 			} else {
 				super.handleMessage(msg);
@@ -363,7 +367,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		SharedPreferences prefer = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = prefer.edit();
 		editor.putString(KEY_PREFERENCE_ROOTDIRECTORY, rootDirectory);
-		editor.putString(KEY_PREFERENCE_PLAYMEDIAID, playFilename);
+			editor.putString(KEY_PREFERENCE_PLAYMEDIAID, playFilename);
 		editor.apply();
 	}
 
