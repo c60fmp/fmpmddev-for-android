@@ -72,7 +72,7 @@ const std::vector<const TCHAR*> Fader::supportedpcmext(void)
 //=============================================================================
 int Fader::music_load(TCHAR *filename)
 {
-    dispatcher->getlength(filename, &length, &loop);
+    dispatcher->fgetlength(filename, &length, &loop);
     fpos = length;
     if(loop != 0) {
         length += FADEOUT_TIME;
@@ -103,9 +103,9 @@ void Fader::music_stop(void)
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-bool Fader::getlength(TCHAR *filename, int *length, int *loop)
+bool Fader::fgetlength(TCHAR *filename, int *length, int *loop)
 {
-    bool result = dispatcher->getlength(filename, length, loop);
+    bool result = dispatcher->fgetlength(filename, length, loop);
     if(*loop != 0) {
         *length += FADEOUT_TIME;
     }
@@ -115,11 +115,20 @@ bool Fader::getlength(TCHAR *filename, int *length, int *loop)
 
 
 //=============================================================================
-//	曲の長さの取得(pos : ms)
+//	Title取得
 //=============================================================================
-uint8_t * Fader::gettitle(uint8_t *dest, TCHAR *filename)
+uint8_t * Fader::fgettitle(uint8_t *dest, TCHAR *filename)
 {
-    return dispatcher->gettitle(dest, filename);
+    return dispatcher->fgettitle(dest, filename);
+}
+
+
+//=============================================================================
+//	現在演奏している曲のTitle取得
+//=============================================================================
+uint8_t * Fader::gettitle(uint8_t *dest)
+{
+    return dispatcher->gettitle(dest);
 }
 
 

@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2020 by C60
-//		Last Updated : 2021/07/11
+//		Last Updated : 2023/12/10
 //
 //#############################################################################
 
@@ -304,7 +304,7 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getpos(JNI
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getlength(JNIEnv *env, jobject thiz,
+extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz,
                                             jobject jfileio, jstring filename,
                                             jobject length, jobject loop)
 {
@@ -332,7 +332,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getlen
             }
 
             if(flag) {
-                result = m->getlength(const_cast<TCHAR *>(cfilename), &length2, &loop2);
+                result = m->fgetlength(const_cast<TCHAR *>(cfilename), &length2, &loop2);
                 if(result) {
                     break;
                 }
@@ -354,8 +354,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getlen
 //=============================================================================
 //	Title取得
 // ============================================================================
-
-extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz,
+extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgettitle(JNIEnv *env, jobject thiz,
                                             jobject jfileio, jstring filename) {
     uint8_t dest[TITLE_BUFFER_SIZE] = {};
 
@@ -379,12 +378,22 @@ extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitl
             }
 
             if(flag) {
-                m->gettitle(dest, const_cast<TCHAR *>(cfilename));
+                m->fgettitle(dest, const_cast<TCHAR *>(cfilename));
             }
         }
         env->ReleaseStringUTFChars(filename, cfilename);
     }
 
+    return env->NewStringUTF(reinterpret_cast<const char *>(dest));
+}
+
+
+//=============================================================================
+//	現在演奏している曲のTitle取得
+// ============================================================================
+extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz) {
+    uint8_t dest[TITLE_BUFFER_SIZE] = {};
+    fader->gettitle(dest);
     return env->NewStringUTF(reinterpret_cast<const char *>(dest));
 }
 

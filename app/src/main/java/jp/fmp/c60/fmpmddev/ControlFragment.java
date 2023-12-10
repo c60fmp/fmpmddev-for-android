@@ -196,14 +196,6 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             if (children != null) {
                 for (MediaBrowserCompat.MediaItem child : children) {
                     if (child.isBrowsable()) {
-                        /*
-                        String mediaId = Uri.decode(child.getDescription().getMediaId());
-                        int length = mediaId.length();
-                        String mediaId2 = mediaId.substring(0, length - 1);
-                        int lastseparator = mediaId2.lastIndexOf("/");
-                        String mediaId3 = mediaId.substring(lastseparator + 1);
-                        adapter.add(mediaId3);
-                        */
                         adapter.add((String)child.getDescription().getTitle() + File.separator);
                     } else {
                         adapter.add(DrivePath.getFilename(child.getDescription().getMediaId()));

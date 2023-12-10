@@ -31,8 +31,9 @@ public:
     int music_load2(uint8_t *musdata, int size);
     void music_start(void);
     void music_stop(void);
-    bool getlength(TCHAR *filename, int *length, int *loop);
-    uint8_t * gettitle(uint8_t *dest, TCHAR *filename);
+    bool fgetlength(TCHAR *filename, int *length, int *loop);
+    uint8_t * fgettitle(uint8_t *dest, TCHAR *filename);
+    uint8_t * gettitle(uint8_t *dest);
     int getpos(void);
     void setpos(int pos);
     void getpcmdata(int16_t *buf, int nsamples);

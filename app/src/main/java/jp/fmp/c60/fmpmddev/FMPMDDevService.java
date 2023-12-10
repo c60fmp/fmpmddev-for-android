@@ -805,12 +805,8 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				continue;
 			}
 
-			// タイトルを取得
-			String title = dispatcher.gettitle(jfileio, s);
-
 			MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
-					.setMediaId(s)
-					.setTitle(title);
+					.setMediaId(s);
 			MediaDescriptionCompat mediadescription = descriptionBuilder.build();
 
 			result.add(new MediaBrowserCompat.MediaItem(mediadescription, MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
@@ -859,8 +855,23 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		if (dispatcher.music_load(jfileio, playFilename) == 0) {
 			MutableInt length = new MutableInt();
 			MutableInt loop = new MutableInt();
-			dispatcher.getlength(jfileio, playFilename, length, loop);
+			dispatcher.fgetlength(jfileio, playFilename, length, loop);
 			musiclength = length.getValue() + loop.getValue() * (LOOP_COUNT - 1) + 1000;
+
+			// タイトルを取得
+			if(playMusicList.get(playMusicNum).getDescription().getTitle() == null) {
+				String title = dispatcher.gettitle();
+
+				// 余分なスペース等を除去
+				title = title.replaceAll("[\\n\\r\\f\\t]", " ");
+				title = title.replaceAll("^(\\s|　)+|(\\s|　)+$", "");
+				title = title.replaceAll("(\\s|　){2,}", " ");
+
+				MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
+						.setMediaId(playFilename)
+						.setTitle(title);
+				playMusicList.set(playMusicNum, new MediaBrowserCompat.MediaItem(descriptionBuilder.build(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+			}
 
 			mediaSession.setActive(true);
 			music_start();

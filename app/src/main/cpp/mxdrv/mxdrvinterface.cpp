@@ -184,7 +184,7 @@ int MXDRVInterface::LoadMDXSub(
 }
 
 
-int MXDRVInterface::getlength(const TCHAR* mdxfilename, int* length) {
+int MXDRVInterface::fgetlength(const TCHAR* mdxfilename, int* length) {
 	int result = LoadMDXSub(mdxfilename, false);
 	if(result) {
 		*length = 0;
@@ -207,14 +207,20 @@ void MXDRVInterface::setpos(int pos) {
 }
 
 
-uint8_t * MXDRVInterface::gettitle(uint8_t *dest, TCHAR *mdxfilename) {
+uint8_t * MXDRVInterface::fgettitle(uint8_t *dest, TCHAR *mdxfilename) {
     int result = LoadMDXSub(mdxfilename, false);
-    if(result == 0 || result == 3) {
-		uint8_t dest2[MAX_LOADSTRING] = {};
-		delesc(reinterpret_cast<char *>(dest2), mdxtitle);
-        sjis2utf8(dest, dest2);
-    }
-    return dest;
+	if(result != 0 && result != 3) {
+		return dest;
+	}
+
+	return gettitle(dest);
+}
+
+
+uint8_t* MXDRVInterface::gettitle(uint8_t *dest) {
+	char dest2[MAX_LOADSTRING] = {};
+	delesc(dest2, mdxtitle);
+	return sjis2utf8(dest, reinterpret_cast<uint8_t *>(dest2));
 }
 
 

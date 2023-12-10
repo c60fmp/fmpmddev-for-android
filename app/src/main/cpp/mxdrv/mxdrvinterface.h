@@ -27,10 +27,11 @@ public:
 
 	void setpdxpath(const TCHAR* pdxpath);
 	int loadmdx(const TCHAR* mdxfilename);
-	int getlength(const TCHAR* mdxfilename, int* length);
+	int fgetlength(const TCHAR* mdxfilename, int* length);
 	int getpos(void);
 	void setpos(int pos);
-    uint8_t* gettitle(uint8_t *dest, TCHAR *mdxfilename);
+    uint8_t* fgettitle(uint8_t *dest, TCHAR *mdxfilename);
+	uint8_t* gettitle(uint8_t *dest);
 
 	int getpcm(int16_t* buf, int len);
 

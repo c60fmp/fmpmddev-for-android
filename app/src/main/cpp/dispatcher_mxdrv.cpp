@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2022 by C60
-//		Last Updated : 2022/07/17
+//		Last Updated : 2023/12/10
 //
 //#############################################################################
 
@@ -125,9 +125,9 @@ void DISPATCHER_MXDRV::music_stop(void)
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-bool DISPATCHER_MXDRV::getlength(TCHAR *filename, int *length, int *loop)
+bool DISPATCHER_MXDRV::fgetlength(TCHAR *filename, int *length, int *loop)
 {
-	mxdrvinterface_2->getlength(filename, length);
+	mxdrvinterface_2->fgetlength(filename, length);
 	*loop = 0;
 	return true;
 }
@@ -136,9 +136,19 @@ bool DISPATCHER_MXDRV::getlength(TCHAR *filename, int *length, int *loop)
 //=============================================================================
 //	Title取得
 //=============================================================================
-uint8_t * DISPATCHER_MXDRV::gettitle(uint8_t *dest, TCHAR *filename)
+uint8_t * DISPATCHER_MXDRV::fgettitle(uint8_t *dest, TCHAR *filename)
 {
-    mxdrvinterface_2->gettitle(dest, filename);
+	mxdrvinterface_2->fgettitle(dest, filename);
+	return dest;
+}
+
+
+//=============================================================================
+//	現在演奏している曲のTitle取得
+// ============================================================================
+uint8_t * DISPATCHER_MXDRV::gettitle(uint8_t *dest)
+{
+	mxdrvinterface->gettitle(dest);
 	return dest;
 }
 

@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2021 by C60
-//		Last Updated : 2021/01/01
+//		Last Updated : 2023/12/10
 //
 //#############################################################################
 
@@ -141,7 +141,7 @@ void DISPATCHER_PMDWIN::music_stop(void)
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-bool DISPATCHER_PMDWIN::getlength(TCHAR *filename, int *length, int *loop)
+bool DISPATCHER_PMDWIN::fgetlength(TCHAR *filename, int *length, int *loop)
 {
 	return pmdwin2->getlength(filename, length, loop);
 }
@@ -150,13 +150,48 @@ bool DISPATCHER_PMDWIN::getlength(TCHAR *filename, int *length, int *loop)
 //=============================================================================
 //	Title取得
 //=============================================================================
-uint8_t * DISPATCHER_PMDWIN::gettitle(uint8_t *dest, TCHAR *filename)
+uint8_t * DISPATCHER_PMDWIN::fgettitle(uint8_t *dest, TCHAR *filename)
 {
-	char dest2[1024+16];
-	pmdwin2->fgetmemo3(dest2, filename, 1);
+	pmdwin2->music_load(filename);
+	return gettitle2(dest, pmdwin2);
+}
 
-	sjis2utf8(dest, (uint8_t *)dest2);
-	return dest;
+
+//=============================================================================
+//	現在演奏している曲のTitle取得
+// ============================================================================
+uint8_t * DISPATCHER_PMDWIN::gettitle(uint8_t *dest)
+{
+	return gettitle2(dest, pmdwin);
+}
+
+
+//=============================================================================
+//	現在演奏している曲のTitle取得(内部処理)
+// ============================================================================
+uint8_t *DISPATCHER_PMDWIN::gettitle2(uint8_t *dest, PMDWIN* pmdwin) {
+	char dest1[1024 + 16] = {};
+	pmdwin->getmemo3(dest1, NULL, 0, 1);
+	if(*dest1 == '\0') {
+		return dest;
+	}
+
+	char dest2[1024+16] = {};
+	pmdwin->getmemo3(dest2, NULL, 0, 2);
+
+	char dest3[1024+16] = {};
+	pmdwin->getmemo3(dest3, NULL, 0, 3);
+
+	if(*dest3 != '\0') {
+		strcat(dest1, " / ");
+		strcat(dest1, dest3);
+
+	} else if(*dest2 != '\0') {
+		strcat(dest1, " / ");
+		strcat(dest1, dest2);
+	}
+
+	return sjis2utf8(dest, (uint8_t *)dest1);
 }
 
 
