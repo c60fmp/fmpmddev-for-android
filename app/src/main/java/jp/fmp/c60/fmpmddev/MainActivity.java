@@ -1,5 +1,6 @@
 package jp.fmp.c60.fmpmddev;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -329,20 +330,32 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	// MediaBrowser 接続時のコールバック
 	private final MediaBrowserCompat.ConnectionCallback connectionCallback = new MediaBrowserCompat.ConnectionCallback() {
 		@Override
+		@TargetApi(android.os.Build.VERSION_CODES.O)
 		public void onConnected() {
 			super.onConnected();
 
-			try {
+			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 				// SessionToken から MediaController を作成
 				controller = new MediaControllerCompat(MainActivity.this, browser.getSessionToken());
 				// Controller の コールバックを設定
 				controller.registerCallback(controllerCallback);
 
-			} catch (RemoteException ex) {
-				ex.printStackTrace();
-				if(ex.getMessage() != null) {
-					Snackbar.make(findViewById(R.id.container), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+			} else {
+				// Todo Android11以下でも使えるよう対応
+				/*
+				try {
+					// SessionToken から MediaController を作成
+					controller = new MediaControllerCompat(MainActivity.this, browser.getSessionToken());
+					// Controller の コールバックを設定
+					controller.registerCallback(controllerCallback);
+
+				} catch (RemoteException ex) {
+					ex.printStackTrace();
+					if (ex.getMessage() != null) {
+						Snackbar.make(findViewById(R.id.container), ex.getMessage(), Snackbar.LENGTH_LONG).show();
+					}
 				}
+				*/
 			}
 		}
 	};

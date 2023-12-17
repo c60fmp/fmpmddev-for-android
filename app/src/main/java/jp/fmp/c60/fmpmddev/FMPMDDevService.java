@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -84,7 +85,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private int musiclength = 60 * 1000;
 
 	// 定期的に処理を回すためのHandler
-	Handler handler = new Handler();
+	Handler handler = new Handler(Looper.getMainLooper());
 
 	// MediaSession
 	MediaSessionCompat mediaSession;
@@ -118,6 +119,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		FMPMDDevService service;
 
 		ServiceHandler(FMPMDDevService service) {
+			super(Looper.getMainLooper());
 			this.service = service;
 		}
 
@@ -254,11 +256,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		// MediaSession を初期化
 		mediaSession = new MediaSessionCompat(getApplicationContext(), TAG_SERVICE);
 
-		// MediaSession が提供する機能を設定
-		mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |   //ヘッドフォン等のボタンを扱う
-				MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS |            	//キュー系のコマンドの使用をサポート
-				MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);        	//再生、停止、スキップ等のコントロールを提供
-
+		setMediaSessionFlags();
 		// クライアントからの操作に応じるコールバックを設定
 		mediaSession.setCallback(callback);
 
@@ -279,6 +277,20 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				UpdateNotification();
 			}
 		});
+	}
+
+
+	@SuppressWarnings("deprecation")
+	// MediaSession が提供する機能を設定
+	private void setMediaSessionFlags() {
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+			mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS);  //キュー系のコマンドの使用をサポート
+
+		} else {
+			mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |   //ヘッドフォン等のボタンを扱う
+					MediaSessionCompat.FLAG_HANDLES_QUEUE_COMMANDS |                //キュー系のコマンドの使用をサポート
+					MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);            //再生、停止、スキップ等のコントロールを提供
+		}
 	}
 
 
@@ -583,7 +595,12 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private PendingIntent createContentIntent() {
 		Intent openUI = new Intent(this, MainActivity.class);
 		openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-		return PendingIntent.getActivity(this, 1, openUI, PendingIntent.FLAG_UPDATE_CURRENT);
+// ToDo 要Android13対応
+		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+			return PendingIntent.getActivity(this, 1, openUI, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+		} else {
+			return PendingIntent.getActivity(this, 1, openUI, PendingIntent.FLAG_UPDATE_CURRENT);
+		}
 	}
 
 
@@ -883,25 +900,24 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 曲データの演奏開始
+	@SuppressWarnings("deprecation")
 	private void music_start() {
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-			if (audioManager.requestAudioFocus(afr) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-				//取得できたら再生を始める
-				mediaSession.setActive(true);
-				dispatcher.music_start();
-				dispatcher.resume();
-				setMusicMetadata();
+			if (audioManager.requestAudioFocus(afr) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+				return;
 			}
 
 		} else {
-			if (audioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-				//取得できたら再生を始める
-				mediaSession.setActive(true);
-				dispatcher.music_start();
-				dispatcher.resume();
-				setMusicMetadata();
+			if (audioManager.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+				return;
 			}
 		}
+
+		//取得できたら再生を始める
+		mediaSession.setActive(true);
+		dispatcher.music_start();
+		dispatcher.resume();
+		setMusicMetadata();
 	}
 
 	//MediaSessionが配信する、再生中の曲の情報を設定
@@ -915,6 +931,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 演奏の Pause
+	@SuppressWarnings("deprecation")
 	private void pause() {
 		dispatcher.pause();
 		// オーディオフォーカスを開放
@@ -927,6 +944,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 演奏停止
+	@SuppressWarnings("deprecation")
 	private void stop() {
 		dispatcher.music_stop();
 		mediaSession.setActive(false);
