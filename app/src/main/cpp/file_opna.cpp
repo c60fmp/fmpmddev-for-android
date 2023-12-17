@@ -210,13 +210,18 @@ TCHAR* FilePath::Strstr(const TCHAR* str1, const TCHAR* str2)
 
 TCHAR* FilePath::Strrstr(const TCHAR* str1, const TCHAR* str2)
 {
-#ifdef _MBCS
-	// TODO 要実装
-#endif
+	if(Strlen(str1) < Strlen(str2)) {
+		return NULL;
+	}
 	
-#ifdef _UNICODE
-	// TODO 要実装
-#endif
+	TCHAR* p = const_cast<TCHAR *>(str1 + Strlen(str1) - Strlen(str2));
+	do {
+		if(Strncmp(p, str2, Strlen(str2)) == 0) {
+			return (TCHAR*)p;
+		}
+	} while(--p >= str1);
+	
+	return NULL;
 }
 
 // ---------------------------------------------------------------------------
@@ -744,7 +749,7 @@ TCHAR* FilePath::Strrstr(const TCHAR* str1, const TCHAR* str2)
 		return NULL;
 	}
 	
-	auto p = str1 + Strlen(str1) - Strlen(str2);
+	TCHAR* p = const_cast<TCHAR *>(str1 + Strlen(str1) - Strlen(str2));
 	do {
 		if(Strncmp(p, str2, Strlen(str2)) == 0) {
 			return (TCHAR*)p;

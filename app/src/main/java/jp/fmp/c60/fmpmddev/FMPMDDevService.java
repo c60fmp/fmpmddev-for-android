@@ -53,12 +53,6 @@ import static android.media.MediaMetadata.METADATA_KEY_TITLE;
 
 
 public class FMPMDDevService extends MediaBrowserServiceCompat {
-	private static final String KEY_PREFERENCE_PCMEXTDIRECTORY = "PCMExtDirectory";
-
-	private static final String KEY_PREFERENCE_ROOTDIRECTORY = "RootDirectory";
-
-	private static final String KEY_PREFERENCE_PLAYMEDIAID = "PlayMediaID";
-
 	// ログ用タグ
 	private final String TAG_SERVICE = FMPMDDevService.class.getSimpleName();
 
@@ -325,15 +319,15 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		SharedPreferences prefer = PreferenceManager.getDefaultSharedPreferences(this);
 
-		rootDirectory = prefer.getString(KEY_PREFERENCE_ROOTDIRECTORY, "/");
+		rootDirectory = prefer.getString(Common.KEY_PREFERENCE_ROOTDIRECTORY, "/");
 
 		String[] pcmext = dispatcher.getsupportedpcmext();
 		for (String ext : pcmext) {
 			String ext2 = ext.replace(".", "");
-			extHashmap.put(ext2, prefer.getString(KEY_PREFERENCE_PCMEXTDIRECTORY + "_" + ext2, "/"));
+			extHashmap.put(ext2, prefer.getString(Common.KEY_PREFERENCE_PCMEXTDIRECTORY + "_" + ext2, "/"));
 		}
 
-		playFilename = prefer.getString(KEY_PREFERENCE_PLAYMEDIAID, "");
+		playFilename = prefer.getString(Common.KEY_PREFERENCE_PLAYMEDIAID, "");
 
 		if (playFilename.isEmpty()) {
 			playDirectory = rootDirectory;
@@ -359,7 +353,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		String[] pcmext = dispatcher.getsupportedpcmext();
 		for (String ext : pcmext) {
 			String ext2 = ext.replace(".", "");
-			editor.putString(KEY_PREFERENCE_PCMEXTDIRECTORY + "_" + ext2, extHashmap.get(ext2));
+			editor.putString(Common.KEY_PREFERENCE_PCMEXTDIRECTORY + "_" + ext2, extHashmap.get(ext2));
 		}
 		editor.apply();
 	}
@@ -369,8 +363,8 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private void savePlayDirectory() {
 		SharedPreferences prefer = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = prefer.edit();
-		editor.putString(KEY_PREFERENCE_ROOTDIRECTORY, rootDirectory);
-			editor.putString(KEY_PREFERENCE_PLAYMEDIAID, playFilename);
+		editor.putString(Common.KEY_PREFERENCE_ROOTDIRECTORY, rootDirectory);
+			editor.putString(Common.KEY_PREFERENCE_PLAYMEDIAID, playFilename);
 		editor.apply();
 	}
 
@@ -718,10 +712,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			};
 
 			Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uri, DocumentsContract.getDocumentId(uri));
-			Cursor cursor = getContentResolver()
-					.query(childrenUri, projection, null, null, null, null);
+			try(Cursor cursor = getContentResolver()
+						.query(childrenUri, projection, null, null, null, null)) {
 
-			try {
 				if (cursor != null && cursor.moveToFirst()) {
 					do {
 						int nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
@@ -747,8 +740,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 					} while (cursor.moveToNext());
 				}
-			} finally {
-				cursor.close();
 			}
 		}
 
@@ -892,7 +883,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 曲データの演奏開始
-	@SuppressWarnings("deprecation")
 	private void music_start() {
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 			if (audioManager.requestAudioFocus(afr) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -925,7 +915,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 演奏の Pause
-	@SuppressWarnings("deprecation")
 	private void pause() {
 		dispatcher.pause();
 		// オーディオフォーカスを開放
@@ -938,7 +927,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 演奏停止
-	@SuppressWarnings("deprecation")
 	private void stop() {
 		dispatcher.music_stop();
 		mediaSession.setActive(false);

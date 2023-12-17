@@ -83,6 +83,18 @@ public class Common {
 
     public static final String KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY     = "directoryToSettingPCMExtDirectory";
 
+
+    // Preference 読み書き時のキー
+    public static final String KEY_PREFERENCE_TREEURI                       = "TreeUri";
+
+    public static final String KEY_PREFERENCE_PCMEXTDIRECTORY               = "PCMExtDirectory";
+
+    public static final String KEY_PREFERENCE_ROOTDIRECTORY                 = "RootDirectory";
+
+    public static final String KEY_PREFERENCE_PLAYMEDIAID                   = "PlayMediaID";
+
+
+    // zip 読み出し時の CharSet
     public static final String[] CHARSET_STRING = {"UTF-8", "MS932"};
 
 }

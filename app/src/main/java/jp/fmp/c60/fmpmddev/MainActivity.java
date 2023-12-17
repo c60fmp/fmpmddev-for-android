@@ -1,12 +1,11 @@
 package jp.fmp.c60.fmpmddev;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,10 +25,10 @@ import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -45,11 +44,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	private static final int PERMISSION_OPEN_DOCUMENT_TREE_CHANGE = 2;
 
 	private static final String KEY_LOCAL_SERVICERUNNING = "ServiceRunning";
-
-	// Main Activity から呼び出す Callback
-	public interface MainActivityListener {
-		void onSetRootDirectory(Bundle bundle);
-	}
 
 	// ルートディレクトリ
 	private String rootDirectory;
@@ -214,15 +208,17 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 
 	private void checkPermission() {
-		// Check if the permission has been granted
-		if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-				== PackageManager.PERMISSION_GRANTED) {
-			// Permission is already available
-			startService();
-			return;
+		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		String treeUriString = preferences.getString(Common.KEY_PREFERENCE_TREEURI, "");
+		if(treeUriString.isEmpty()) {
+			selectRootDirectory(true);
+		} else {
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, Uri.parse(treeUriString));
+			if(docFile != null) {
+				this.rootDirectory = docFile.getUri() + "/";
+				startService();
+			}
 		}
-
-		selectRootDirectory(true);
 	}
 
 
@@ -246,20 +242,28 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE || requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CHANGE) {
 			Uri treeUri = resultData.getData();
 			getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
 
+			// 権限を保存
+			SharedPreferences preferences =  PreferenceManager.getDefaultSharedPreferences(this);
+			preferences.edit().putString(Common.KEY_PREFERENCE_TREEURI, treeUri.toString()).apply();
+
+			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
 			if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE) {
-				this.rootDirectory = docFile.getUri() + "/";
-				startService();
+				if(docFile != null) {
+					this.rootDirectory = docFile.getUri() + "/";
+					startService();
+				}
 
 			} else {
 				// settingDialogFragment に root directory を設定
 				SettingDialogFragment settingDialogFragment = (SettingDialogFragment)getSupportFragmentManager().findFragmentByTag(SettingDialogFragment.SETTINGDIALOG_FRAGMENT_TAG);
 				if(settingDialogFragment != null) {
 					Bundle lBundle = new Bundle();
-					lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, docFile.getUri() + "/");
-					setDirectoryDialogFragmentArguments(lBundle);
-					settingDialogFragment.onSetRootDirectory(lBundle);
+					if(docFile != null) {
+						lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, docFile.getUri() + "/");
+						setDirectoryDialogFragmentArguments(lBundle);
+						settingDialogFragment.onSetRootDirectory(lBundle);
+					}
 				}
 			}
 		}
