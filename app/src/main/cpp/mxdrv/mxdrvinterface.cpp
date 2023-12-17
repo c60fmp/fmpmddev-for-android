@@ -116,7 +116,7 @@ int MXDRVInterface::LoadMDXSub(
 		havepdx = false;
 
 	} else {
-		char pdxnamel[_MAX_PATH] = {};
+		char pdxnamel[_MAX_PATH] = {};	// 小文字(SJIS)
 		// pdxname を小文字に変換
 		for (size_t i = 0; i < strlen(pdxname); i++) {
 			if (((uint8_t)pdxname[i] >= 0x81 && (uint8_t)pdxname[i] <= 0x9f) || ((uint8_t)pdxname[i] >= 0xe0 && (uint8_t)pdxname[i] <= 0xfc)) {	// SJIS 1バイト目
@@ -129,11 +129,14 @@ int MXDRVInterface::LoadMDXSub(
 			}
 		}
 
-		TCHAR pdxnameuu[_MAX_PATH] = {};
-		TCHAR pdxnameul[_MAX_PATH] = {};
+		TCHAR pdxnameuu[_MAX_PATH] = {};	// オリジナル(UTF8)、エンコード
+		TCHAR pdxnameul[_MAX_PATH] = {};	// 小文字(UTF8)、エンコード
 
 		filepath.CharToTCHAR(pdxnameuu, pdxname);
 		filepath.CharToTCHAR(pdxnameul, pdxnamel);
+
+		filepath.EncodeUri(pdxnameuu, pdxnameuu);
+		filepath.EncodeUri(pdxnameul, pdxnameul);
 
 		filepath.Makepath_dir_filename(pdxfilename, mdxfolder, pdxnameuu);
 		if ((pdxfilesize = pfileio->GetFileSize(pdxfilename)) < 0) {

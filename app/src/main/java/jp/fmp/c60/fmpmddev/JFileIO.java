@@ -168,15 +168,14 @@ public class JFileIO {
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
 			for(String charset : Common.CHARSET_STRING) {
-				try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)), Charset.forName(charset))) {
+				try (ZipInputStream zipStream = new ZipInputStream(new BufferedInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename))), Charset.forName(charset))) {
 					ZipEntry entry;
 					while ((entry = zipStream.getNextEntry()) != null) {
 						if (entry.isDirectory()) {
 							continue;
 						}
 
-						if (entry.getName().equals(encodedfilename)) {
-							//@ ToDo result == -1 になる不具合修正
+						if (entry.getName().equalsIgnoreCase(Uri.decode(encodedfilename))) {
 							result = entry.getSize();
 							return result;
 						}
@@ -216,14 +215,14 @@ public class JFileIO {
 			String encodedfilename = fullfilename.substring(zipend + 5);
 
 			for(String charset : Common.CHARSET_STRING) {
-				try (ZipInputStream zipStream = new ZipInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename)), Charset.forName(charset))) {
+				try (ZipInputStream zipStream = new ZipInputStream(new BufferedInputStream(context.getContentResolver().openInputStream(Uri.parse(zipfilename))), Charset.forName(charset))) {
 					ZipEntry entry;
 					while ((entry = zipStream.getNextEntry()) != null) {
 						if (entry.isDirectory()) {
 							continue;
 						}
 
-						if (entry.getName().equals(encodedfilename)) {
+						if (entry.getName().equalsIgnoreCase(Uri.decode(encodedfilename))) {
 							data = new byte[(int) entry.getSize()];
 
 							BufferedInputStream bufStream = new BufferedInputStream(zipStream);

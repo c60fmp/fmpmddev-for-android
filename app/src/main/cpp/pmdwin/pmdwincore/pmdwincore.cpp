@@ -6914,6 +6914,7 @@ int PMDWIN::music_load3(uint8_t *musdata, int size, TCHAR *current_dir)
 	// PPC/P86 読み込み
 	_getmemo(tempfilename, musdata, size, 0);
 	filepath.CharToTCHARn(pcmfilename, tempfilename, sizeof(tempfilename));
+	filepath.EncodeUri(pcmfilename, pcmfilename);
 	
 	if(*pcmfilename != filepath.EmptyChar) {
 		if(filepath.Comparepath(pcmfilename, _T(".P86"), FilePath::extractpath_ext) == 0) {
@@ -6952,6 +6953,7 @@ int PMDWIN::music_load3(uint8_t *musdata, int size, TCHAR *current_dir)
 	ppsext = false;
 	_getmemo(tempfilename, musdata, size, -1);
 	filepath.CharToTCHARn(pcmfilename, tempfilename, sizeof(tempfilename));
+	filepath.EncodeUri(pcmfilename, pcmfilename);
 	
 	if(*pcmfilename != filepath.EmptyChar) {
 		// 拡張子を .PPS に変換する
@@ -6973,6 +6975,7 @@ int PMDWIN::music_load3(uint8_t *musdata, int size, TCHAR *current_dir)
 	// 20010120 TOWNS の場合は無視する
 	_getmemo(tempfilename, musdata, size, -2);
 	filepath.CharToTCHARn(ppzfilename1, tempfilename, sizeof(tempfilename));
+	filepath.EncodeUri(pcmfilename, pcmfilename);
 	
 	if(*ppzfilename1 != filepath.EmptyChar) {
 		if(filepath.Comparepath(ppzfilename1, _T(".PMB"), FilePath::extractpath_ext) != 0 && musdata[0] != 0xff) {

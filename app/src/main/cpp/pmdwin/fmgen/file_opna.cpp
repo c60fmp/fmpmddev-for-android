@@ -9,6 +9,8 @@
 #include "sjis2utf.h"
 
 
+#define ANDROID_SAF		// Android で SAF を用いるときに定義
+
 #ifdef _WIN32
 
 // ---------------------------------------------------------------------------
@@ -184,6 +186,36 @@ TCHAR* FilePath::Strrchr(const TCHAR *str, TCHAR c)
 	
 #ifdef _UNICODE
 	return (TCHAR*)wcsrchr((TCHAR*)str, c);
+#endif
+}
+
+// ---------------------------------------------------------------------------
+//	指定された文字列の最初の出現箇所を検索
+// ---------------------------------------------------------------------------
+
+TCHAR* FilePath::Strstr(const TCHAR* str1, const TCHAR* str2)
+{
+#ifdef _MBCS
+	return (TCHAR*)_mbsstr((const unsigned char*)str1, (const unsigned char*)str2);
+#endif
+	
+#ifdef _UNICODE
+	return (TCHAR*)wcsstr((TCHAR*)str1, (TCHAR*)str2);
+#endif
+}
+
+// ---------------------------------------------------------------------------
+//	指定された文字列の最後の出現箇所を検索
+// ---------------------------------------------------------------------------
+
+TCHAR* FilePath::Strrstr(const TCHAR* str1, const TCHAR* str2)
+{
+#ifdef _MBCS
+	// TODO 要実装
+#endif
+	
+#ifdef _UNICODE
+	// TODO 要実装
 #endif
 }
 
@@ -694,14 +726,53 @@ TCHAR* FilePath::Strrchr(const TCHAR *str, TCHAR c)
 }
 
 // ---------------------------------------------------------------------------
-//	文字列の末尾に「/」を付与
+//	指定された文字列の最初の出現箇所を検索
+// ---------------------------------------------------------------------------
+
+TCHAR* FilePath::Strstr(const TCHAR* str1, const TCHAR* str2)
+{
+	return (TCHAR*)strstr((char*)str1, (char*)str2);
+}
+
+// ---------------------------------------------------------------------------
+//	指定された文字列の最後の出現箇所を検索
+// ---------------------------------------------------------------------------
+
+TCHAR* FilePath::Strrstr(const TCHAR* str1, const TCHAR* str2)
+{
+	if(Strlen(str1) < Strlen(str2)) {
+		return NULL;
+	}
+	
+	auto p = str1 + Strlen(str1) - Strlen(str2);
+	do {
+		if(Strncmp(p, str2, Strlen(str2)) == 0) {
+			return (TCHAR*)p;
+		}
+	} while(--p >= str1);
+	
+	return NULL;
+}
+
+// ---------------------------------------------------------------------------
+//	文字列の末尾に「/」または「%2F」を付与
 // ---------------------------------------------------------------------------
 
 TCHAR* FilePath::AddDelimiter(TCHAR* str)
 {
+#ifdef ANDROID_SAF
+	if(Strlen(str) >= 3) {
+		if(Strcmp(str + Strlen(str) - 3, "%2F") != 0 && Strcmp(str + Strlen(str) - 3, "%2f") == 0) {
+			Strcat(str, "%2F");
+		}
+	}
+	
+#else
 	if(Strrchr(str, _T('/')) != &str[Strlen(str)-1]) {
 		Strcat(str, _T("/"));
 	}
+	
+#endif
 	return str;
 }
 
@@ -747,8 +818,25 @@ void FilePath::Splitpath(const TCHAR *path, TCHAR *drive, TCHAR *dir, TCHAR *fna
 		}
 		return;
 	}
+
+#ifdef ANDROID_SAF
+	const int SeparetorSize = 3;
+#else
+	const int SeparetorSize = 1;
+#endif
+
+#ifdef ANDROID_SAF
+	TCHAR*	p11 = Strrstr(path, "%2F");
+	TCHAR*	p12 = Strrstr(path, "%2f");
+	TCHAR*	p1 = p11;
+	if(p1 == NULL) {
+		p1 = p12;
+	}
 	
+#else
 	TCHAR*	p1 = Strrchr(path, '/');
+	
+#endif
 	TCHAR*	p2 = Strrchr(path, '.');
 	
 	if(p1 != NULL && p2 != NULL && p1 > p2) {
@@ -756,7 +844,7 @@ void FilePath::Splitpath(const TCHAR *path, TCHAR *drive, TCHAR *dir, TCHAR *fna
 	}
 	
 	if(p1 == NULL) {
-		p1 = const_cast<TCHAR*>(path) - 1;
+		p1 = const_cast<TCHAR*>(path) - SeparetorSize;
 	}
 	
 	if(p2 == NULL) {
@@ -768,13 +856,13 @@ void FilePath::Splitpath(const TCHAR *path, TCHAR *drive, TCHAR *dir, TCHAR *fna
 	}
 	
 	if(dir != NULL) {
-		Strncpy(dir, path, p1 - path + 1);
-		dir[p1 - path + 1] = EmptyChar;
+		Strncpy(dir, path, p1 - path + SeparetorSize);
+		dir[p1 - path + SeparetorSize] = EmptyChar;
 	}
 	
 	if(fname != NULL) {
-		Strncpy(fname, p1 + 1, p2 - p1 - 1);
-		fname[p2 - p1 - 1] = EmptyChar;
+		Strncpy(fname, p1 + SeparetorSize, p2 - p1 - SeparetorSize);
+		fname[p2 - p1 - SeparetorSize] = EmptyChar;
 	}
 	
 	if(ext != NULL) {
@@ -788,24 +876,47 @@ void FilePath::Splitpath(const TCHAR *path, TCHAR *drive, TCHAR *dir, TCHAR *fna
 
 void FilePath::Makepath(TCHAR *path, const TCHAR *drive, const TCHAR *dir, const TCHAR *fname, const TCHAR *ext)
 {
+#ifdef ANDROID_SAF
 	// driveは無視
 	
 	if(dir == NULL) {
 		*path = EmptyChar;
 	} else {
-		strcpy(path, dir);
-		if(strlen(path) >= 1) {
-			if(path[strlen(path)-1] != '/') {
-				strcat(path, "/");
+		Strcpy(path, dir);
+		if(Strlen(path) >= 3) {
+			int b1 = Strcmp(path + Strlen(path) - 3, "%2F");
+			int b2 = Strcmp(path + Strlen(path) - 3, "%2f");
+			if(b1 != 0 && b2 != 0) {
+				if(b2 != 0) {
+					Strcat(path, "%2f");
+				} else {
+					Strcat(path, "%2F");
+				}
 			}
 		}
 	}
+	
+#else
+	// driveは無視
+	
+	if(dir == NULL) {
+		*path = EmptyChar;
+	} else {
+		Strcpy(path, dir);
+		if(Strlen(path) >= 1) {
+			if(path[Strlen(path)-1] != '/') {
+				Strcat(path, "/");
+			}
+		}
+	}
+#endif
+	
 	if(fname != NULL) {
-		strcat(path, fname);
+		Strcat(path, fname);
 	}
 	
 	if(ext != NULL) {
-		strcat(path, ext);
+		Strcat(path, ext);
 	}
 }
 
@@ -816,9 +927,20 @@ void FilePath::Makepath(TCHAR *path, const TCHAR *drive, const TCHAR *dir, const
 void FilePath::Makepath_dir_filename(TCHAR* path, const TCHAR* dir, const TCHAR* filename)
 {
 	Strcpy(path, dir);
+	
+#ifdef ANDROID_SAF
+	if(Strlen(path) >= 3) {
+		if(Strcmp(path + Strlen(path) - 3, "%2F") != 0 && Strcmp(path + Strlen(path) - 3, "%2f") != 0) {
+			Strcat(path, "%2F");
+		}
+	}
+	
+#else
 	if(Strrchr(dir, _T('/')) != &dir[Strlen(dir)-1] && Strlen(path) > 0) {
 		Strcat(path, _T("/"));
 	}
+#endif
+	
 	Strcat(path, filename);
 }
 
@@ -832,6 +954,12 @@ void FilePath::Extractpath(TCHAR *dest, const TCHAR *src, uint flg)
 	TCHAR	dir[_MAX_PATH];
 	TCHAR	filename[_MAX_PATH];
 	TCHAR	ext[_MAX_PATH];
+	
+	memset(drive, 0, sizeof(drive));
+	memset(dir, 0, sizeof(dir));
+	memset(filename, 0, sizeof(filename));
+	memset(ext, 0, sizeof(ext));
+	
 	TCHAR*	pdrive;
 	TCHAR*	pdir;
 	TCHAR*	pfilename;
@@ -875,6 +1003,9 @@ int FilePath::Comparepath(TCHAR *filename1, const TCHAR *filename2, uint flg)
 	TCHAR	extfilename1[_MAX_PATH];
 	TCHAR	extfilename2[_MAX_PATH];
 	
+	memset(extfilename1, 0, sizeof(extfilename1));
+	memset(extfilename2, 0, sizeof(extfilename2));
+	
 	Extractpath(extfilename1, filename1, flg);
 	Extractpath(extfilename2, filename2, flg);
 	return Stricmp(extfilename1, extfilename2);
@@ -890,6 +1021,11 @@ TCHAR* FilePath::ExchangeExt(TCHAR *dest, TCHAR *src, const TCHAR *ext)
 	TCHAR	dir2[_MAX_PATH];
 	TCHAR	filename2[_MAX_PATH];
 	TCHAR	ext2[_MAX_PATH];
+	
+	memset(drive2, 0, sizeof(drive2));
+	memset(dir2, 0, sizeof(dir2));
+	memset(filename2, 0, sizeof(filename2));
+	memset(ext2, 0, sizeof(ext2));
 	
 	Splitpath(src, drive2, dir2, filename2, ext2);
 	Makepath(dest, drive2, dir2, filename2, ext);
@@ -917,6 +1053,47 @@ TCHAR* FilePath::CharToTCHARn(TCHAR *dest, const char *src, size_t count)
 	//	return Strncpy(dest, src, count);
 	return (TCHAR*)sjis2utf8n((uint8_t*)dest, (uint8_t*)src, count);
 }
+
+// ---------------------------------------------------------------------------
+//	Uri Encode(Android SAFを用いている時のみ)
+// ---------------------------------------------------------------------------
+
+TCHAR* FilePath::EncodeUri(TCHAR *dest, const char *src)
+{
+#ifdef ANDROID_SAF
+	int length = Strlen(src);
+	
+	char* dest0 = new char[length * 2 + 16];
+	if(dest0 == NULL) {
+		return dest;
+	}
+	memset(dest0, EmptyChar, length * 2 + 16);
+	
+	char* dest1 = dest0;
+	for(char* p = (char*)src; *p != EmptyChar; p++) {
+		if(
+			(*p >= 0x20 && *p <= 0x39)  ||  // [0-9]
+			(*p >= 0x41 && *p <= 0x5A)  ||  // [A-Z]
+			(*p >= 0x61 && *p <= 0x7A)  ||  // [a-z]
+			(*p == 0x2E)                ||  // .
+			(*p == 0x2F)                ||  // /
+			(*p == 0x3A)                    // :
+		) {
+			*dest1 = *p;
+			dest1++;
+			
+		} else {
+			dest1 += sprintf(dest1, "%%%02X", *p & 0xff);
+		}
+	}
+	
+	Strcpy(dest, dest0);
+	delete[] dest0;
+	
+#endif
+	return dest;
+}
+
 
 
 // ---------------------------------------------------------------------------

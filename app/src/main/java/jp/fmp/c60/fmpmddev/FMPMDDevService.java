@@ -183,7 +183,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY) {
 				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
-				playFilename = "";
+//				playFilename = "";
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
 				// 起動時、前回終了時の曲を再生する

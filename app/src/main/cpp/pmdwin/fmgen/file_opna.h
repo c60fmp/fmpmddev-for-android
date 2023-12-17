@@ -1,4 +1,4 @@
-﻿#ifndef FILE_OPNA_H
+#ifndef FILE_OPNA_H
 #define FILE_OPNA_H
 
 #include "portability_opna.h"
@@ -38,8 +38,11 @@ public:
 	TCHAR*	Strcat(TCHAR* dest, const TCHAR* src);
 	TCHAR*	Strncat(TCHAR* dest, const TCHAR* src, size_t count);
 	
-	TCHAR*	Strchr(const TCHAR *str, TCHAR c);
-	TCHAR*	Strrchr(const TCHAR *str, TCHAR c);
+	TCHAR*	Strchr(const TCHAR* str, TCHAR c);
+	TCHAR*	Strrchr(const TCHAR* str, TCHAR c);
+	TCHAR*	Strstr(const TCHAR* str1, const TCHAR* str2);
+	TCHAR*	Strrstr(const TCHAR* str1, const TCHAR* str2);
+	
 	TCHAR*	AddDelimiter(TCHAR* str);
 	
 	void Extractpath(TCHAR *dest, const TCHAR *src, uint flg);
@@ -50,6 +53,8 @@ public:
 	
 	TCHAR* CharToTCHAR(TCHAR *dest, const char *src);
 	TCHAR* CharToTCHARn(TCHAR *dest, const char *src, size_t count);
+	
+	TCHAR* EncodeUri(TCHAR *dest, const char *src);
 	
 protected:
 	void Splitpath(const TCHAR *path, TCHAR *drive, TCHAR *dir, TCHAR *fname, TCHAR *ext);
