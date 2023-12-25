@@ -24,6 +24,7 @@ import androidx.fragment.app.Fragment;
 
 import java.io.File;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -172,7 +173,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
     @Override
     public void onResume() {
         super.onResume();
-        setTopItem(bundle.getString(KEY_LOCAL_BROWSEDIRECTORY), bundle.getString(KEY_LOCAL_PLAYMEDIAID), suppressAssign(bundle.getSerializable(KEY_LOCAL_SUBSCRIBECHILDREN)));
+        setTopItem(bundle.getString(KEY_LOCAL_BROWSEDIRECTORY), bundle.getString(KEY_LOCAL_PLAYMEDIAID), Common.suppressSerializable(bundle, KEY_LOCAL_SUBSCRIBECHILDREN, new ArrayList<>()));
     }
 
 
@@ -182,7 +183,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
 
         Bundle bundle = getArguments();
         String directory = bundle.getString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY);
-        List<MediaBrowserCompat.MediaItem> children = suppressAssign(bundle.getSerializable(Common.KEY_ACTIVITY_TO_CONTROL_SUBSCRIBECHILDREN));
+        List<MediaBrowserCompat.MediaItem> children = Common.suppressSerializable(bundle, Common.KEY_ACTIVITY_TO_CONTROL_SUBSCRIBECHILDREN, new ArrayList<>());
 
         if(!directory.equals(this.bundle.getString(KEY_LOCAL_BROWSEDIRECTORY))) {
             adapter.clear();
@@ -419,7 +420,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             listener.subscribeCache(lBundle);
 
         } else {
-            List<MediaBrowserCompat.MediaItem> mediaItems = suppressAssign(getArguments().getSerializable(Common.KEY_ACTIVITY_TO_CONTROL_SUBSCRIBECHILDREN));
+            List<MediaBrowserCompat.MediaItem> mediaItems = Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_CONTROL_SUBSCRIBECHILDREN, new ArrayList<>());
 
                     MediaBrowserCompat.MediaItem item;
             if(directory.equals(getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_ROOTDIRECTORY))) {
@@ -462,11 +463,5 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
 
-    }
-
-
-    @SuppressWarnings("unchecked")
-    private <T> T suppressAssign(Serializable value) {
-        return (T)value;
     }
 }

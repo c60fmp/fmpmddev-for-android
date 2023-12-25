@@ -1,7 +1,5 @@
 package jp.fmp.c60.fmpmddev;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +22,10 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
@@ -34,15 +36,13 @@ import androidx.preference.PreferenceManager;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 
 public class MainActivity extends AppCompatActivity implements ControlFragment.ControlFragmentListener, SettingDialogFragment.SettingDialogFragmentListener {
-
-	private static final int PERMISSION_OPEN_DOCUMENT_TREE_CREATE = 1;
-	private static final int PERMISSION_OPEN_DOCUMENT_TREE_CHANGE = 2;
 
 	private static final String KEY_LOCAL_SERVICERUNNING = "ServiceRunning";
 
@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 				lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, msg.getData().getString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY));
 
 				// 拡張子とディレクトリのペア を bundle に詰める
-				HashMap<String, String> extHashmap = suppressAssign(msg.getData().getSerializable(Common.KEY_SERVICE_TO_ACTIVITY_PCMEXTDIRECTORY));
+				HashMap<String, String> extHashmap = Common.suppressSerializable(msg.getData(), Common.KEY_SERVICE_TO_ACTIVITY_PCMEXTDIRECTORY, new HashMap<>());
 				ExtDirItem[] edi = new ExtDirItem[extHashmap.size()];
 				int i = 0;
 				for(Map.Entry<String, String> entry : extHashmap.entrySet()) {
@@ -226,49 +226,67 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	private void selectRootDirectory(boolean isCreate) {
 		Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
 		if(isCreate) {
-			startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE_CREATE);
+			createTreeLauncher.launch(intent);
 		} else {
-			startActivityForResult(intent, PERMISSION_OPEN_DOCUMENT_TREE_CHANGE);
+			changeTreeLauncher.launch(intent);
 		}
 	}
 
 
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
-		super.onActivityResult(requestCode, resultCode, resultData);
-		if(resultCode != Activity.RESULT_OK) {
-			return;
-		}
+	ActivityResultLauncher<Intent> createTreeLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+			new ActivityResultCallback<ActivityResult>() {
+				@Override
+				public void onActivityResult(ActivityResult result) {
+					if (result.getResultCode() != RESULT_OK) {
+						return;
+					}
 
-		if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE || requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CHANGE) {
-			Uri treeUri = resultData.getData();
-			getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+					Uri treeUri = result.getData().getData();
+					getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-			// 権限を保存
-			SharedPreferences preferences =  PreferenceManager.getDefaultSharedPreferences(this);
-			preferences.edit().putString(Common.KEY_PREFERENCE_TREEURI, treeUri.toString()).apply();
+					// 権限を保存
+					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+					preferences.edit().putString(Common.KEY_PREFERENCE_TREEURI, treeUri.toString()).apply();
 
-			DocumentFile docFile = DocumentFile.fromTreeUri(this, treeUri);
-			if (requestCode == PERMISSION_OPEN_DOCUMENT_TREE_CREATE) {
-				if(docFile != null) {
-					this.rootDirectory = docFile.getUri() + "/";
-					startService();
-				}
-
-			} else {
-				// settingDialogFragment に root directory を設定
-				SettingDialogFragment settingDialogFragment = (SettingDialogFragment)getSupportFragmentManager().findFragmentByTag(SettingDialogFragment.SETTINGDIALOG_FRAGMENT_TAG);
-				if(settingDialogFragment != null) {
-					Bundle lBundle = new Bundle();
-					if(docFile != null) {
-						lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, docFile.getUri() + "/");
-						setDirectoryDialogFragmentArguments(lBundle);
-						settingDialogFragment.onSetRootDirectory(lBundle);
+					DocumentFile docFile = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
+					if (docFile != null) {
+						MainActivity.this.rootDirectory = docFile.getUri() + "/";
+						startService();
 					}
 				}
 			}
-		}
-	}
+	);
+
+
+	ActivityResultLauncher<Intent> changeTreeLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+			new ActivityResultCallback<ActivityResult>() {
+				@Override
+				public void onActivityResult(ActivityResult result) {
+					if (result.getResultCode() != RESULT_OK) {
+						return;
+					}
+
+					Uri treeUri = result.getData().getData();
+					getContentResolver().takePersistableUriPermission(treeUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+					// 権限を保存
+					SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+					preferences.edit().putString(Common.KEY_PREFERENCE_TREEURI, treeUri.toString()).apply();
+
+					DocumentFile docFile = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
+					// settingDialogFragment に root directory を設定
+					SettingDialogFragment settingDialogFragment = (SettingDialogFragment) getSupportFragmentManager().findFragmentByTag(SettingDialogFragment.SETTINGDIALOG_FRAGMENT_TAG);
+					if (settingDialogFragment != null) {
+						Bundle lBundle = new Bundle();
+						if (docFile != null) {
+							lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, docFile.getUri() + "/");
+							setDirectoryDialogFragmentArguments(lBundle);
+							settingDialogFragment.onSetRootDirectory(lBundle);
+						}
+					}
+				}
+			}
+	);
 
 
 	private void startService() {
@@ -321,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			} else {
 				directoryDialogFragment.getArguments().putString(Common.KEY_ACTIVITY_TO_DIRECTORY_ROOTDIRECTORY, rootDirectory);
 				directoryDialogFragment.getArguments().putString(Common.KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY, bundle.getString(Common.KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY));
-				directoryDialogFragment.getArguments().putSerializable(Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN, bundle.getSerializable(Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN));
+				directoryDialogFragment.getArguments().putSerializable(Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN, Common.suppressSerializable(bundle, Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN, new ArrayList<>()));
 			}
 		}
 	}
@@ -330,33 +348,13 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	// MediaBrowser 接続時のコールバック
 	private final MediaBrowserCompat.ConnectionCallback connectionCallback = new MediaBrowserCompat.ConnectionCallback() {
 		@Override
-		@TargetApi(android.os.Build.VERSION_CODES.O)
 		public void onConnected() {
 			super.onConnected();
 
-			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-				// SessionToken から MediaController を作成
-				controller = new MediaControllerCompat(MainActivity.this, browser.getSessionToken());
-				// Controller の コールバックを設定
-				controller.registerCallback(controllerCallback);
-
-			} else {
-				// Todo Android11以下でも使えるよう対応
-				/*
-				try {
-					// SessionToken から MediaController を作成
-					controller = new MediaControllerCompat(MainActivity.this, browser.getSessionToken());
-					// Controller の コールバックを設定
-					controller.registerCallback(controllerCallback);
-
-				} catch (RemoteException ex) {
-					ex.printStackTrace();
-					if (ex.getMessage() != null) {
-						Snackbar.make(findViewById(R.id.container), ex.getMessage(), Snackbar.LENGTH_LONG).show();
-					}
-				}
-				*/
-			}
+			// SessionToken から MediaController を作成
+			controller = new MediaControllerCompat(MainActivity.this, browser.getSessionToken());
+			// Controller の コールバックを設定
+			controller.registerCallback(controllerCallback);
 		}
 	};
 
@@ -649,7 +647,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		boolean rootDirectoryChanged = !bundle.getString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY).equals(rootDirectory);
 		rootDirectory = bundle.getString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY);
-		ExtDirItem[] extDirItem = (ExtDirItem[])bundle.getSerializable(Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY);
+		ExtDirItem[] extDirItem = Common.suppressSerializable(bundle, Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY, new ExtDirItem[0]);
 
 		HashMap<String, String> extHashmap = new HashMap<>();
 		for(ExtDirItem v : extDirItem) {
@@ -672,11 +670,5 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		if(rootDirectoryChanged) {
 			Snackbar.make(findViewById(R.id.container), R.string.snackbar_restart, Snackbar.LENGTH_LONG).show();
 		}
-	}
-
-
-	@SuppressWarnings("unchecked")
-	private <T> T suppressAssign(Serializable value) {
-		return (T)value;
 	}
 }

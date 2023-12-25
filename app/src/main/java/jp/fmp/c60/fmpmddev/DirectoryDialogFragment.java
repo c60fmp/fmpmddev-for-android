@@ -2,7 +2,6 @@ package jp.fmp.c60.fmpmddev;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
@@ -17,7 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
 import java.io.File;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -34,33 +33,11 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
 
     private static final String KEY_LOCAL_SUBSCRIBECHILDREN = "localSubscribeChildren";
 
-    // Directory Dialog Fragment から呼び出す Callback
-    public interface DirectoryDialogFragmentListener {
-        void onDialogPositiveClick(Bundle bundle);
-    }
-
-    // SettingDialogFragment への Callback
-    DirectoryDialogFragmentListener listener;
-
     // アダプター
     private ArrayAdapter<String> adapter = null;
 
     // ダイアログで保持する必要のある Bundle
     Bundle bundle = new Bundle();
-
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            // Instantiate the SettingDialogListener so we can send events to the host
-            listener = (DirectoryDialogFragmentListener)getTargetFragment();
-        } catch (ClassCastException e) {
-            // The activity doesn't implement the interface, throw exception
-            throw new ClassCastException(getActivity().toString()
-                    + " must implement DirectoryDialogFragmentListener");
-        }
-    }
 
 
     @Override
@@ -92,7 +69,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
                     Bundle lBundle = new Bundle();
                     lBundle.putString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT, bundle.getString(KEY_LOCAL_EXTENSION));
                     lBundle.putString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY, bundle.getString(KEY_LOCAL_DIRECTORY));
-                    listener.onDialogPositiveClick(lBundle);
+                    getParentFragmentManager().setFragmentResult(Common.KEY_DIRECTORY_TO_SETTING_FRAGMENTRESULT, lBundle);
                 }
             })
             .setNegativeButton(R.string.directory_dialog_cancel, new DialogInterface.OnClickListener() {
@@ -121,7 +98,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
         Bundle lBundle = getArguments();
         String rootDirectory = bundle.getString(KEY_LOCAL_ROOTDIRECTORY);
         String parentId = lBundle.getString(Common.KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY);
-        bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, lBundle.getSerializable(Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN));
+        bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, Common.suppressSerializable(lBundle, Common.KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN, new ArrayList<>()));
 
         adapter.clear();
 
@@ -134,7 +111,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
             directory = File.separator;
         }
 
-        List<MediaBrowserCompat.MediaItem> children = suppressAssign(bundle.getSerializable(KEY_LOCAL_SUBSCRIBECHILDREN));
+        List<MediaBrowserCompat.MediaItem> children = Common.suppressSerializable(bundle, KEY_LOCAL_SUBSCRIBECHILDREN, new ArrayList<>());
         for(MediaBrowserCompat.MediaItem child : children) {
             if(child.isBrowsable()) {
                 adapter.add(child.getDescription().getTitle() + File.separator);
@@ -165,7 +142,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
             ((MainActivity)getActivity()).subscribecached(lBundle);
 
         } else {
-            List<MediaBrowserCompat.MediaItem> children = suppressAssign(bundle.getSerializable(KEY_LOCAL_SUBSCRIBECHILDREN));
+            List<MediaBrowserCompat.MediaItem> children = Common.suppressSerializable(bundle, KEY_LOCAL_SUBSCRIBECHILDREN, new ArrayList<>());
             MediaBrowserCompat.MediaItem item;
             if(directory.equals(rootDirectory)) {
                 item = children.get(position);
@@ -184,11 +161,5 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
                 ((MainActivity)getActivity()).subscribecached(lBundle);
             }
         }
-    }
-
-
-    @SuppressWarnings("unchecked")
-    private <T> T suppressAssign(Serializable value) {
-        return (T)value;
     }
 }

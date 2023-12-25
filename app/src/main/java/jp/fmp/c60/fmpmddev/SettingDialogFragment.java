@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentResultListener;
 
 
 class ArrayAdapterExtDir extends ArrayAdapter<ExtDirItem> {
@@ -47,7 +48,7 @@ class ArrayAdapterExtDir extends ArrayAdapter<ExtDirItem> {
 }
 
 
-public class SettingDialogFragment extends DialogFragment implements AdapterView.OnItemClickListener, DirectoryDialogFragment.DirectoryDialogFragmentListener {
+public class SettingDialogFragment extends DialogFragment implements AdapterView.OnItemClickListener, FragmentResultListener {
 
     // SettingDialog Fragment Tag
     public static final String SETTINGDIALOG_FRAGMENT_TAG   = "SettingDialogFragment";
@@ -92,7 +93,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
         super.onCreateDialog(savedInstanceState);
 
         bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
-        bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, getArguments().getSerializable(Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY));
+        bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY, new ExtDirItem[0]));
 
         // ダイアログのメインビュー設定、及び、ListView 取得
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -102,9 +103,6 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         adapter = new ArrayAdapterExtDir(SettingDialogFragment.this.getActivity(), R.layout.list_item);
         listView.setAdapter(adapter);
-
-        // ListView に表示するデータ
-        ExtDirItem[] extDirItem = (ExtDirItem[])(bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
 
         setAdapterData();
 
@@ -119,7 +117,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
                     // OK
                     Bundle lBundle = new Bundle();
                     lBundle.putString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
-                    lBundle.putSerializable(Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY, bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+                    lBundle.putSerializable(Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY, Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]));
                     listener.onDialogPositiveClick(lBundle);
                 }
             })
@@ -138,7 +136,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-        ExtDirItem[] extDirItem = (ExtDirItem[])(bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+        ExtDirItem[] extDirItem = Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
         if(position > extDirItem.length) {
             return;
         }
@@ -166,17 +164,18 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
             DialogFragment directoryDialogFragment = new DirectoryDialogFragment();
             directoryDialogFragment.setArguments(lBundle);
 
-            directoryDialogFragment.setTargetFragment(SettingDialogFragment.this, 0);
+            getParentFragmentManager().setFragmentResultListener(Common.KEY_DIRECTORY_TO_SETTING_FRAGMENTRESULT, this, this);
             directoryDialogFragment.show(getActivity().getSupportFragmentManager(), DirectoryDialogFragment.DIRECTORYDIALOG_FRAGMENT_TAG);
         }
     }
 
 
-    public void onDialogPositiveClick(Bundle bundle) {
+    @Override
+    public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle bundle) {
         String extension = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT);
         String directory = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY);
 
-        ExtDirItem[] extDirItem = (ExtDirItem[])(this.bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+        ExtDirItem[] extDirItem = Common.suppressSerializable(this.bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
         if(extension.equals(getString(R.string.root_directory_name))) {
             this.bundle.putString(KEY_LOCAL_ROOTDIRECTORY, directory);
 
@@ -196,10 +195,10 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
         bundle.putString(KEY_LOCAL_ROOTDIRECTORY, lBundle.getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
 
         // PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
-        ExtDirItem[] extDirItem = (ExtDirItem[])(bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
-        for(int i = 0; i < extDirItem.length; i++) {
-            if(!DrivePath.isSameTree(bundle.getString(KEY_LOCAL_ROOTDIRECTORY), extDirItem[i].getDirectory())) {
-                extDirItem[i].setDirectory(bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
+        ExtDirItem[] extDirItem = Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
+        for(ExtDirItem it : extDirItem) {
+            if(!DrivePath.isSameTree(bundle.getString(KEY_LOCAL_ROOTDIRECTORY), it.getDirectory())) {
+                it.setDirectory(bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
             }
         }
 
@@ -211,7 +210,7 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
         String extension = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT);
         String directory = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY);
 
-        ExtDirItem[] extDirItem = (ExtDirItem[])(this.bundle.getSerializable(KEY_LOCAL_PCMEXTDIRECTORY));
+        ExtDirItem[] extDirItem = Common.suppressSerializable(this.bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
         if(extension != null && extension.equals(getString(R.string.root_directory_name))) {
             this.bundle.putString(KEY_LOCAL_ROOTDIRECTORY, directory);
 

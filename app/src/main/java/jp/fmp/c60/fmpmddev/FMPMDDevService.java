@@ -33,7 +33,6 @@ import androidx.media.session.MediaButtonReceiver;
 import androidx.preference.PreferenceManager;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.text.Normalizer;
@@ -215,7 +214,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS) {
 				// Activity で設定された PCM 等のディレクトリを Dispatcher 等に設定する
-				service.extHashmap = service.suppressAssign(msg.getData().getSerializable(Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY));
+				service.extHashmap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
 				service.jfileio.SetPath(service.extHashmap);
 				service.dispatcher.init(service.jfileio);
 				service.savePcmDirectory();
@@ -595,7 +594,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private PendingIntent createContentIntent() {
 		Intent openUI = new Intent(this, MainActivity.class);
 		openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-// ToDo 要Android13対応
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
 			return PendingIntent.getActivity(this, 1, openUI, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 		} else {
@@ -900,7 +898,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 曲データの演奏開始
-	@SuppressWarnings("deprecation")
 	private void music_start() {
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 			if (audioManager.requestAudioFocus(afr) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -1228,12 +1225,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		}
 
 		return skiptoprevioussub(mediaId2, true, false);
-	}
-
-
-	@SuppressWarnings("unchecked")
-	private <T> T suppressAssign(Serializable value) {
-		return (T)value;
 	}
 }
 

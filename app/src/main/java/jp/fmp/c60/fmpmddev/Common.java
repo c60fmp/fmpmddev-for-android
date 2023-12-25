@@ -1,5 +1,10 @@
 package jp.fmp.c60.fmpmddev;
 
+import android.os.Build;
+import android.os.Bundle;
+
+import java.io.Serializable;
+
 public class Common {
 
     // MainActivity と Service のメッセージ
@@ -63,8 +68,6 @@ public class Common {
 
     public static final String KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY      = "settingToActivityPCMExtDirectory";
 
-
-    // SettingDialgoFragment と DirestoryDialogFragment のインターフェイス
     public static final String KEY_ACTIVITY_TO_DIRECTORY_ROOTDIRECTORY      = "activityToDirectoryRootDirectory";
 
     public static final String KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY    = "activityToDirectoryBrowseDirectory";
@@ -73,11 +76,15 @@ public class Common {
 
     public static final String KEY_DIRECTORY_TO_ACTIVITY_BROWSEDIRECTORY    = "directoryToActivityBrowseDirectory";
 
+
+    // SettingDialgoFragment と DirestoryDialogFragment のインターフェイス
     public static final String KEY_SETTING_TO_DIRECTORY_ROOTDIRECTORY       = "settingToDirectoryRootDirectory";
 
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXT              = "settingToDirectoryPCMExt";
 
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY     = "settingToDirectoryPCMExtDirectory";
+
+    public static final String KEY_DIRECTORY_TO_SETTING_FRAGMENTRESULT      = "directoryToSettingFragmentResult";
 
     public static final String KEY_DIRECTORY_TO_SETTING_PCMEXT              = "directoryToSettingPCMExt";
 
@@ -97,4 +104,13 @@ public class Common {
     // zip 読み出し時の CharSet
     public static final String[] CHARSET_STRING = {"UTF-8", "MS932"};
 
+
+    @SuppressWarnings({"deprecation", "unchecked"})
+    public static <T extends Serializable> T suppressSerializable(Bundle bundle, String key, T clazz) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return (T)bundle.getSerializable(key, clazz.getClass());
+        } else {
+            return (T)bundle.getSerializable(key);
+        }
+    }
 }
