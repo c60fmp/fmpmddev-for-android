@@ -1068,11 +1068,11 @@ TCHAR* FilePath::EncodeUri(TCHAR *dest, const char *src)
 #ifdef ANDROID_SAF
 	int length = Strlen(src);
 	
-	char* dest0 = new char[length * 2 + 16];
+	char* dest0 = new char[length * 3 + 16];
 	if(dest0 == NULL) {
 		return dest;
 	}
-	memset(dest0, EmptyChar, length * 2 + 16);
+	memset(dest0, EmptyChar, length * 3 + 16);
 	
 	char* dest1 = dest0;
 	for(char* p = (char*)src; *p != EmptyChar; p++) {
