@@ -1,10 +1,12 @@
 package jp.fmp.c60.fmpmddev;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +30,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -57,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 	// controlFragment に渡す情報を入れる Bundle
 	private final Bundle cBundle = new Bundle();
+
+	// 通知が許可されていれば true
+	private boolean isAllowPostNotifications = true;
 
 	// Service が起動されていれば true
 	private boolean serviceRunning = false;
@@ -89,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			try {
 				Bundle lBundle = new Bundle();
 				lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, rootDirectory);
+				lBundle.putBoolean(Common.KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS, isAllowPostNotifications);
 
 				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_INIT, 0, 0);
 				msg.setData(lBundle);
@@ -182,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		transaction.commit();
 
 		if(!serviceRunning) {
-			checkPermission();
+			checkDocumentTree();
 		}
 	}
 
@@ -208,7 +215,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	}
 
 
-	private void checkPermission() {
+	private void checkDocumentTree() {
 		SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		String treeUriString = preferences.getString(Common.KEY_PREFERENCE_TREEURI, "");
 		if(treeUriString.isEmpty()) {
@@ -217,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			DocumentFile docFile = DocumentFile.fromTreeUri(this, Uri.parse(treeUriString));
 			if(docFile != null) {
 				this.rootDirectory = docFile.getUri() + "/";
-				startService();
+				checkNotificationPermission();
 			}
 		}
 	}
@@ -251,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 					DocumentFile docFile = DocumentFile.fromTreeUri(MainActivity.this, treeUri);
 					if (docFile != null) {
 						MainActivity.this.rootDirectory = docFile.getUri() + "/";
-						startService();
+						checkNotificationPermission();
 					}
 				}
 			}
@@ -284,6 +291,26 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 							settingDialogFragment.onSetRootDirectory(lBundle);
 						}
 					}
+				}
+			}
+	);
+
+
+	private void checkNotificationPermission() {
+		if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+			startService();
+		} else {
+			postNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+		}
+	}
+
+
+	ActivityResultLauncher<String> postNotificationLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+			new ActivityResultCallback<Boolean>() {
+				@Override
+				public void onActivityResult(Boolean isGranted) {
+					isAllowPostNotifications = isGranted;
+					startService();
 				}
 			}
 	);

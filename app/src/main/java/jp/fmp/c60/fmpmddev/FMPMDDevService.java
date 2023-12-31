@@ -1,5 +1,8 @@
 package jp.fmp.c60.fmpmddev;
 
+import static android.media.MediaMetadata.METADATA_KEY_DURATION;
+import static android.media.MediaMetadata.METADATA_KEY_TITLE;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -48,9 +51,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static android.media.MediaMetadata.METADATA_KEY_DURATION;
-import static android.media.MediaMetadata.METADATA_KEY_TITLE;
-
 
 public class FMPMDDevService extends MediaBrowserServiceCompat {
 	// ログ用タグ
@@ -58,6 +58,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 	// ループ数
 	private static final int LOOP_COUNT						= 1;
+
+	// 通知が許可されていれば true
+	private boolean isAllowPostNotifications				= false;
 
 	// 通知の更新周期(ms)
 	private static final int UPDATE_NOTIFICATION_INTERVAL	= 100;
@@ -133,6 +136,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					// Root Directory の設定(設定されている場合)
 					setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
 					// playFilename = "";
+
+					// 通知が許可されているかの設定
+					isAllowPostNotifications = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS);
 
 					service.jfileio = new JFileIO(service.extHashmap, service);
 					service.dispatcher.init(service.jfileio);
@@ -491,9 +497,12 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 	// 通知を更新する
 	private void UpdateNotification() {
-		NotificationResult result = CreateNotificationSub();
+		if(!isAllowPostNotifications) {
+			return;
+		}
 
 		// 通知を更新
+		NotificationResult result = CreateNotificationSub();
 		result.notificationManager.notify(1, result.builder.build());
 	}
 
