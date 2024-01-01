@@ -57,7 +57,10 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private final String TAG_SERVICE = FMPMDDevService.class.getSimpleName();
 
 	// ループ数
-	private static final int LOOP_COUNT						= 1;
+	private static int loopCount							= 1;
+
+	// ループ数
+	private static boolean playOnlyPCMData					= true;
 
 	// 通知が許可されていれば true
 	private boolean isAllowPostNotifications				= false;
@@ -202,10 +205,16 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_GETSETTINGS) {
-				// Activity に設定に必要な情報(PCM等の拡張子、ディレクトリ等)を返す
+				// Activity に設定に必要な情報(ループ数、PCM等の拡張子、ディレクトリ等)を返す
 				try {
 					Message msg2 = Message.obtain(null, Common.MSG_SERVICE_TO_ACTIVITY_GETSETTINGS, 0, 0);
 					Bundle bundle = new Bundle();
+
+					// ループ数を MainActivity に返す
+					bundle.putInt(Common.KEY_SERVICE_TO_ACTIVITY_LOOPCOUNT, loopCount);
+
+					// PCMデータあるときのみ再生フラグを MainActivity に返す
+					bundle.putBoolean(Common.KEY_SERVICE_TO_ACTIVITY_PLAYONLYPCMDATA, playOnlyPCMData);
 
 					// root directory を MainActivity に返す
 					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, service.rootDirectory);
@@ -219,8 +228,22 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS) {
-				// Activity で設定された PCM 等のディレクトリを Dispatcher 等に設定する
-				service.extHashmap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
+				// Activity で設定されたループ数、PCM 等のディレクトリを Dispatcher 等に設定する
+				service.loopCount = msg.getData().getInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT);
+				service.playOnlyPCMData = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA, true);
+
+				HashMap<String, String> tempHashMap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
+				if(service.extHashmap.equals(tempHashMap)) {
+					// 局長変更処理
+					// ToDo diapatcher 側に移動
+					MutableInt length = new MutableInt();
+					MutableInt loop = new MutableInt();
+					dispatcher.fgetlength(jfileio, playFilename, length, loop);
+					musiclength = length.getValue() + loop.getValue() * (loopCount - 1) + 1000;
+					setMusicMetadata();
+					return;
+				}
+
 				service.jfileio.SetPath(service.extHashmap);
 				service.dispatcher.init(service.jfileio);
 				service.savePcmDirectory();
@@ -878,7 +901,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			MutableInt length = new MutableInt();
 			MutableInt loop = new MutableInt();
 			dispatcher.fgetlength(jfileio, playFilename, length, loop);
-			musiclength = length.getValue() + loop.getValue() * (LOOP_COUNT - 1) + 1000;
+			musiclength = length.getValue() + loop.getValue() * (loopCount - 1) + 1000;
 
 			// タイトルを取得
 			if(playMusicList.get(playMusicNum).getDescription().getTitle() == null) {
@@ -907,6 +930,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 
 	// 曲データの演奏開始
+	@SuppressWarnings("deprecation")
 	private void music_start() {
 		if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
 			if (audioManager.requestAudioFocus(afr) != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {

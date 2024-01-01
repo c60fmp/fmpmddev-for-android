@@ -10,7 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -48,10 +51,14 @@ class ArrayAdapterExtDir extends ArrayAdapter<ExtDirItem> {
 }
 
 
-public class SettingDialogFragment extends DialogFragment implements AdapterView.OnItemClickListener, FragmentResultListener {
+public class SettingDialogFragment extends DialogFragment implements LinearLayout.OnClickListener, Switch.OnCheckedChangeListener, AdapterView.OnItemClickListener, FragmentResultListener {
 
     // SettingDialog Fragment Tag
     public static final String SETTINGDIALOG_FRAGMENT_TAG   = "SettingDialogFragment";
+
+    private static final String KEY_LOCAL_LOOPCOUNT         = "localLoopCount";
+
+    private static final String KEY_LOCAL_PLAYONLYPCMDATA   = "localPlayOnlyPCMData";
 
     private static final String KEY_LOCAL_ROOTDIRECTORY     = "localRootDirectory";
 
@@ -92,12 +99,25 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
 
+        bundle.putInt(KEY_LOCAL_LOOPCOUNT, getArguments().getInt(Common.KEY_ACTIVITY_TO_SETTING_LOOPCOUNT));
+        bundle.putBoolean(KEY_LOCAL_PLAYONLYPCMDATA, getArguments().getBoolean(Common.KEY_ACTIVITY_TO_SETTING_PLAYONLYPCMDATA));
         bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
         bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY, new ExtDirItem[0]));
 
         // ダイアログのメインビュー設定、及び、ListView 取得
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View settingView = inflater.inflate(R.layout.fragment_setting, null);
+
+        LinearLayout linearLayoutLoopCount = settingView.findViewById(R.id.linearLayoutLoopCount);
+        linearLayoutLoopCount.setOnClickListener(this);
+
+        TextView textView = settingView.findViewById(R.id.textViewLoopCount);
+        textView.setText(String.valueOf(bundle.getInt(KEY_LOCAL_LOOPCOUNT)));
+
+        Switch sw = settingView.findViewById(R.id.playingPCMdataSwitch);
+        sw.setChecked(bundle.getBoolean(KEY_LOCAL_PLAYONLYPCMDATA));
+        sw.setOnCheckedChangeListener(this);
+
         ListView listView = settingView.findViewById(R.id.listview_setting);
         listView.setOnItemClickListener(this);
 
@@ -108,14 +128,14 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder
-            .setTitle(R.string.setting_dialog_title)
-
             .setView(settingView)
 
             .setPositiveButton(R.string.setting_dialog_ok, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     // OK
                     Bundle lBundle = new Bundle();
+                    lBundle.putInt(Common.KEY_SETTING_TO_ACTIVITY_LOOPCOUNT, bundle.getInt(KEY_LOCAL_LOOPCOUNT));
+                    lBundle.putBoolean(Common.KEY_SETTING_TO_ACTIVITY_PLAYONLYPCMDATA, bundle.getBoolean(KEY_LOCAL_PLAYONLYPCMDATA));
                     lBundle.putString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
                     lBundle.putSerializable(Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY, Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]));
                     listener.onDialogPositiveClick(lBundle);
@@ -132,7 +152,30 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
     }
 
 
-    // 行をクリックしたときのイベント
+    @Override
+    // Loop Count をタップしたときのイベント
+    public void onClick(View view) {
+        Bundle lBundle = new Bundle();
+
+        lBundle.putInt(Common.KEY_SETTING_TO_NUMPICKER_VALUE, bundle.getInt(KEY_LOCAL_LOOPCOUNT));
+
+        //　ダイアログを開く
+        DialogFragment numPickerDialogFragment = new NumPickerDialogFragment();
+        numPickerDialogFragment.setArguments(lBundle);
+
+        getParentFragmentManager().setFragmentResultListener(Common.KEY_NUMPICKER_TO_SETTING_FRAGMENTRESULT, this, this);
+        numPickerDialogFragment.show(getActivity().getSupportFragmentManager(), NumPickerDialogFragment.NUMPICKERDIALOG_FRAGMENT_TAG);
+    }
+
+
+    @Override
+    // Swtich を変更したときのイベント
+    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+        this.bundle.putBoolean(KEY_LOCAL_PLAYONLYPCMDATA, b);
+    }
+
+
+    // ListView の行をクリックしたときのイベント
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -172,22 +215,32 @@ public class SettingDialogFragment extends DialogFragment implements AdapterView
 
     @Override
     public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle bundle) {
-        String extension = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT);
-        String directory = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY);
+        switch(requestKey) {
+            case Common.KEY_DIRECTORY_TO_SETTING_FRAGMENTRESULT:
+                String extension = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXT);
+                String directory = bundle.getString(Common.KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY);
 
-        ExtDirItem[] extDirItem = Common.suppressSerializable(this.bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
-        if(extension.equals(getString(R.string.root_directory_name))) {
-            this.bundle.putString(KEY_LOCAL_ROOTDIRECTORY, directory);
+                ExtDirItem[] extDirItem = Common.suppressSerializable(this.bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
+                if (extension.equals(getString(R.string.root_directory_name))) {
+                    this.bundle.putString(KEY_LOCAL_ROOTDIRECTORY, directory);
 
-        } else {
-            for (ExtDirItem edi : extDirItem) {
-                if (edi.getExtension().equals(extension)) {
-                    edi.setDirectory(directory);
+                } else {
+                    for (ExtDirItem edi : extDirItem) {
+                        if (edi.getExtension().equals(extension)) {
+                            edi.setDirectory(directory);
+                        }
+                    }
                 }
-            }
-        }
 
-        setAdapterData();
+                setAdapterData();
+                break;
+
+            case Common.KEY_NUMPICKER_TO_SETTING_FRAGMENTRESULT:
+                this.bundle.putInt(KEY_LOCAL_LOOPCOUNT, bundle.getInt(Common.KEY_NUMPICKER_TO_SETTING_VALUE));
+                TextView textView = getDialog().findViewById(R.id.textViewLoopCount);
+                textView.setText(String.valueOf(this.bundle.getInt(KEY_LOCAL_LOOPCOUNT)));
+                break;
+        }
     }
 
 

@@ -24,6 +24,14 @@ public class Common {
 
 
     // MainActivity と Service で共通に用いるキー
+    public static final String KEY_SERVICE_TO_ACTIVITY_LOOPCOUNT                = "serviceToActivityLoopCount";
+
+    public static final String KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT                = "activityToServiceLoopCount";
+
+    public static final String KEY_SERVICE_TO_ACTIVITY_PLAYONLYPCMDATA          = "serviceToActivityPlayOnlyPCMData";
+
+    public static final String KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA          = "activityToServicePlayOnlyPCMData";
+
     public static final String KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY            = "serviceToActivityRootDirectroy";
 
     public static final String KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY            = "activityToServiceRootDirectroy";
@@ -42,9 +50,13 @@ public class Common {
 
     public static final String KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY          = "activityToControlBrowseDirectory";
 
+    public static final String KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY          = "controlToActivityBrowseDirectory";
+
     public static final String KEY_ACTIVITY_TO_CONTROL_SUBSCRIBECHILDREN        = "activityToControlSubscribeChildren";
 
     public static final String KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID              = "activityToControlPlayMediaID";
+
+    public static final String KEY_CONTROL_TO_ACTIVITY_PLAYMEDIAID              = "controlToActivityPlayMediaID";
 
     public static final String KEY_ACTIVITY_TO_CONTROL_PLAYTITLE                = "activityToControlPlayTitle";
 
@@ -54,29 +66,34 @@ public class Common {
 
     public static final String KEY_ACTIVITY_TO_CONTROL_PLAYSTATUS               = "activityToControlPlayStatus";
 
-    public static final String KEY_CONTROL_TO_ACTIVITY_PLAYMEDIAID              = "controlToActivityPlayMediaID";
-
     public static final String KEY_CONTROL_TO_ACTIVITY_SEEKPOSITION             = "controlToActivitySeekPosition";
-
-    public static final String KEY_CONTROL_TO_ACTIVITY_BROWSEDIRECTORY          = "controlToActivityBrowseDirectory";
 
 
     // MainActivity と SettingDialogFragment / DirectoryDialogFragment のインターフェイス
-    public static final String KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY            = "activityToSettingRootDirectory";
+    public static final String KEY_ACTIVITY_TO_SETTING_LOOPCOUNT                = "activityToSettingLoopCount";
 
-    public static final String KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY          = "activityToSettingPCMExtDirectory";
+    public static final String KEY_SETTING_TO_ACTIVITY_LOOPCOUNT                = "settingToActivityLoopCount";
+
+    public static final String KEY_ACTIVITY_TO_SETTING_PLAYONLYPCMDATA          = "activityToSettingPlayOnlyPCMData";
+
+    public static final String KEY_SETTING_TO_ACTIVITY_PLAYONLYPCMDATA          = "settingToActivityPlayOnlyPCMData";
+
+    public static final String KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY            = "activityToSettingRootDirectory";
 
     public static final String KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY            = "settingToActivityRootDirectory";
 
+    public static final String KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY          = "activityToSettingPCMExtDirectory";
+
     public static final String KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY          = "settingToActivityPCMExtDirectory";
+
 
     public static final String KEY_ACTIVITY_TO_DIRECTORY_ROOTDIRECTORY          = "activityToDirectoryRootDirectory";
 
     public static final String KEY_ACTIVITY_TO_DIRECTORY_BROWSEDIRECTORY        = "activityToDirectoryBrowseDirectory";
 
-    public static final String KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN      = "activityToDirectorySubscribeChildren";
-
     public static final String KEY_DIRECTORY_TO_ACTIVITY_BROWSEDIRECTORY        = "directoryToActivityBrowseDirectory";
+
+    public static final String KEY_ACTIVITY_TO_DIRECTORY_SUBSCRIBECHILDREN      = "activityToDirectorySubscribeChildren";
 
 
     // SettingDialgoFragment と DirestoryDialogFragment のインターフェイス
@@ -84,13 +101,21 @@ public class Common {
 
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXT                  = "settingToDirectoryPCMExt";
 
+    public static final String KEY_DIRECTORY_TO_SETTING_PCMEXT                  = "directoryToSettingPCMExt";
+
     public static final String KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY         = "settingToDirectoryPCMExtDirectory";
+
+    public static final String KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY         = "directoryToSettingPCMExtDirectory";
 
     public static final String KEY_DIRECTORY_TO_SETTING_FRAGMENTRESULT          = "directoryToSettingFragmentResult";
 
-    public static final String KEY_DIRECTORY_TO_SETTING_PCMEXT                  = "directoryToSettingPCMExt";
 
-    public static final String KEY_DIRECTORY_TO_SETTING_PCMEXTDIRECTORY         = "directoryToSettingPCMExtDirectory";
+    // SettingDialgoFragment と NumPickerDialogFragment のインターフェイス
+    public static final String KEY_SETTING_TO_NUMPICKER_VALUE                   = "settingToNumPickerValue";
+
+    public static final String KEY_NUMPICKER_TO_SETTING_VALUE                   = "numPickerToSettingValue";
+
+    public static final String KEY_NUMPICKER_TO_SETTING_FRAGMENTRESULT           = "numPickerToSettingFragmentResult";
 
 
     // Preference 読み書き時のキー

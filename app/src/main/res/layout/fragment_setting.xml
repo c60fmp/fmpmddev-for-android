@@ -6,16 +6,89 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp" >
 
-        <ListView
-            android:id="@+id/listview_setting"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/textView0"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:layout_marginStart="20dp">
-        </ListView>
+            android:text="Settings"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorBackground"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="10dp" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:layout_marginStart="0dp"
+            android:layout_marginTop="0dp">
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="General" />
+
+                    <LinearLayout
+                        android:id="@+id/linearLayoutLoopCount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="20dp" >
+
+                        <TextView
+                            android:id="@+id/textView2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Loop Count"
+                            android:layout_gravity="start" />
+
+                        <TextView
+                            android:id="@+id/textViewLoopCount"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="1"
+                            android:gravity="end" />
+                    </LinearLayout>
+
+                    <Switch
+                        android:id="@+id/playingPCMdataSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Playing only when PCM data is available"
+                        android:textColor="@color/colorPrimary"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="20dp"
+                        android:layout_marginStart="10dp"
+                        android:checked="true" />
+
+                    <TextView
+                        android:id="@+id/textView4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="PCM Direstory" />
+
+                    <ListView
+                        android:id="@+id/listview_setting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginStart="10dp" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

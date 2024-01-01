@@ -22,6 +22,8 @@
     <string name="setting_dialog_ok">OK</string>
     <string name="setting_dialog_cancel">Cancel</string>
 
+    <string name="numpicker_dialog_title">Loop Count</string>
+
     <string name="directory_dialog_title">Directory</string>
     <string name="directory_dialog_ok">OK</string>
     <string name="directory_dialog_cancel">Cancel</string>
