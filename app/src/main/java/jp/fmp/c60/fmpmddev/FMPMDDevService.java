@@ -140,26 +140,29 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					// 通知が許可されているかの設定
 					isAllowPostNotifications = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS);
 
-					service.jfileio = new JFileIO(service.extHashmap, service);
-					service.dispatcher.init(service.jfileio);
+					jfileio = new JFileIO(extHashmap, service);
+					dispatcher.init(jfileio);
 
 					// 曲数をカウント＆キューに追加
-					service.playMusicList = service.getMediaItems(service.playDirectory);
-					service.setqueue(service.playMusicList);
+					playMusicList = getMediaItems(playDirectory);
+					setqueue(playMusicList);
+
+					dispatcher.setloopcount(loopCount);
+
 
 					// 一定周期で再生情報を更新
-					service.handler.postDelayed(new Runnable() {
+					handler.postDelayed(new Runnable() {
 						@Override
 						public void run() {
-							service.UpdatePlaybackState();
+							UpdatePlaybackState();
 
 							// 再生終了時に次の曲に
-							if (service.dispatcher.getpos() > service.musiclength) {
-								service.skiptonext();
+							if (dispatcher.getpos() > musiclength) {
+								skiptonext();
 							}
 
 							//再度実行
-							service.handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
+							handler.postDelayed(this, UPDATE_NOTIFICATION_INTERVAL);
 						}
 					}, UPDATE_NOTIFICATION_INTERVAL);
 
@@ -174,8 +177,8 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					Bundle bundle = new Bundle();
 
 					// root directory, play directory を MainActivity に返す
-					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, service.rootDirectory);
-					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_BROWSEDIRECTORY, service.playDirectory);
+					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, rootDirectory);
+					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_BROWSEDIRECTORY, playDirectory);
 					msg2.setData(bundle);
 					msg.replyTo.send(msg2);
 				} catch (RemoteException e) {
@@ -188,16 +191,16 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
 				// 起動時、前回終了時の曲を再生する
-				if (!service.playFilename.isEmpty()) {
+				if (!playFilename.isEmpty()) {
 					// 演奏中でなければ前回終了時の曲を再生する
-					if(service.mediaSession.getController().getPlaybackState() == null ||
-							service.mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING &&
-							service.mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PAUSED) {
-						service.music_load(service.playFilename);
+					if(mediaSession.getController().getPlaybackState() == null ||
+							mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PLAYING &&
+							mediaSession.getController().getPlaybackState().getState() != PlaybackStateCompat.STATE_PAUSED) {
+						music_load(playFilename);
 
 					} else {
 						// 演奏中なら曲データを配信
-						service.setMusicMetadata();
+						setMusicMetadata();
 					}
 				}
 
@@ -211,10 +214,10 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					bundle.putInt(Common.KEY_SERVICE_TO_ACTIVITY_LOOPCOUNT, loopCount);
 
 					// root directory を MainActivity に返す
-					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, service.rootDirectory);
+					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, rootDirectory);
 
 					// PCM 等の拡張子、ディレクトリ等を MainActivity に返す
-					bundle.putSerializable(Common.KEY_SERVICE_TO_ACTIVITY_PCMEXTDIRECTORY, service.extHashmap);
+					bundle.putSerializable(Common.KEY_SERVICE_TO_ACTIVITY_PCMEXTDIRECTORY, extHashmap);
 					msg2.setData(bundle);
 					msg.replyTo.send(msg2);
 				} catch (RemoteException e) {
@@ -223,26 +226,26 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS) {
 				// Activity で設定されたループ数、PCM 等のディレクトリを Dispatcher 等に設定する
-				service.loopCount = msg.getData().getInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT);
-				dispatcher.setloopcount(service.loopCount);
+				loopCount = msg.getData().getInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT);
+				dispatcher.setloopcount(loopCount);
 
 				HashMap<String, String> tempHashMap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
-				if(service.extHashmap.equals(tempHashMap)) {
+				if(extHashmap.equals(tempHashMap)) {
 					// 曲長変更処理
 					musiclength = dispatcher.fgetlength(jfileio, playFilename) + 1000;
 					setMusicMetadata();
 					return;
 				}
 
-				service.jfileio.SetPath(service.extHashmap);
-				service.dispatcher.init(service.jfileio);
-				service.savePcmDirectory();
+				jfileio.SetPath(extHashmap);
+				dispatcher.init(jfileio);
+				savePcmDirectory();
 
-				service.pause();
-				service.rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
-				service.playDirectory = service.rootDirectory;
-				service.playFilename = "";
-				service.savePlayDirectory();
+				pause();
+				rootDirectory = msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY);
+				playDirectory = rootDirectory;
+				playFilename = "";
+				savePlayDirectory();
 
 			} else {
 				super.handleMessage(msg);
@@ -351,6 +354,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		rootDirectory = prefer.getString(Common.KEY_PREFERENCE_ROOTDIRECTORY, "/");
 
+		loopCount = prefer.getInt(Common.KEY_PREFERENCE_LOOPCOUNT, 1);
+
+
 		String[] pcmext = dispatcher.getsupportedpcmext();
 		for (String ext : pcmext) {
 			String ext2 = ext.replace(".", "");
@@ -389,12 +395,13 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	}
 
 
-	// ルートディレクトリ、演奏ファイルの保管
+	// ルートディレクトリ、ループ数、演奏ファイルの保管
 	private void savePlayDirectory() {
 		SharedPreferences prefer = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = prefer.edit();
 		editor.putString(Common.KEY_PREFERENCE_ROOTDIRECTORY, rootDirectory);
-			editor.putString(Common.KEY_PREFERENCE_PLAYMEDIAID, playFilename);
+		editor.putInt(Common.KEY_PREFERENCE_LOOPCOUNT, loopCount);
+		editor.putString(Common.KEY_PREFERENCE_PLAYMEDIAID, playFilename);
 		editor.apply();
 	}
 

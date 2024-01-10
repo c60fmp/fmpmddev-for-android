@@ -117,6 +117,8 @@ public class Common {
 
     public static final String KEY_PREFERENCE_ROOTDIRECTORY                     = "RootDirectory";
 
+    public static final String KEY_PREFERENCE_LOOPCOUNT                         = "loopCount";
+
     public static final String KEY_PREFERENCE_PLAYMEDIAID                       = "PlayMediaID";
 
 
