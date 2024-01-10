@@ -28,10 +28,6 @@ public class Common {
 
     public static final String KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT                = "activityToServiceLoopCount";
 
-    public static final String KEY_SERVICE_TO_ACTIVITY_PLAYONLYPCMDATA          = "serviceToActivityPlayOnlyPCMData";
-
-    public static final String KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA          = "activityToServicePlayOnlyPCMData";
-
     public static final String KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY            = "serviceToActivityRootDirectroy";
 
     public static final String KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY            = "activityToServiceRootDirectroy";
@@ -73,10 +69,6 @@ public class Common {
     public static final String KEY_ACTIVITY_TO_SETTING_LOOPCOUNT                = "activityToSettingLoopCount";
 
     public static final String KEY_SETTING_TO_ACTIVITY_LOOPCOUNT                = "settingToActivityLoopCount";
-
-    public static final String KEY_ACTIVITY_TO_SETTING_PLAYONLYPCMDATA          = "activityToSettingPlayOnlyPCMData";
-
-    public static final String KEY_SETTING_TO_ACTIVITY_PLAYONLYPCMDATA          = "settingToActivityPlayOnlyPCMData";
 
     public static final String KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY            = "activityToSettingRootDirectory";
 

@@ -59,9 +59,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	// ループ数
 	private static int loopCount							= 1;
 
-	// ループ数
-	private static boolean playOnlyPCMData					= true;
-
 	// 通知が許可されていれば true
 	private boolean isAllowPostNotifications				= false;
 
@@ -213,9 +210,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					// ループ数を MainActivity に返す
 					bundle.putInt(Common.KEY_SERVICE_TO_ACTIVITY_LOOPCOUNT, loopCount);
 
-					// PCMデータあるときのみ再生フラグを MainActivity に返す
-					bundle.putBoolean(Common.KEY_SERVICE_TO_ACTIVITY_PLAYONLYPCMDATA, playOnlyPCMData);
-
 					// root directory を MainActivity に返す
 					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY, service.rootDirectory);
 
@@ -231,7 +225,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				// Activity で設定されたループ数、PCM 等のディレクトリを Dispatcher 等に設定する
 				service.loopCount = msg.getData().getInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT);
 				dispatcher.setloopcount(service.loopCount);
-				service.playOnlyPCMData = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA, true);
 
 				HashMap<String, String> tempHashMap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
 				if(service.extHashmap.equals(tempHashMap)) {

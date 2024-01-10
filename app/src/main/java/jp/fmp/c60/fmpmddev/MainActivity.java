@@ -143,7 +143,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 				Bundle lBundle = new Bundle();
 				lBundle.putInt(Common.KEY_ACTIVITY_TO_SETTING_LOOPCOUNT, msg.getData().getInt(Common.KEY_SERVICE_TO_ACTIVITY_LOOPCOUNT));
-				lBundle.putBoolean(Common.KEY_ACTIVITY_TO_SETTING_PLAYONLYPCMDATA, msg.getData().getBoolean(Common.KEY_SERVICE_TO_ACTIVITY_PLAYONLYPCMDATA));
 				lBundle.putString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY, msg.getData().getString(Common.KEY_SERVICE_TO_ACTIVITY_ROOTDIRECTORY));
 
 				// 拡張子とディレクトリのペア を bundle に詰める
@@ -676,10 +675,8 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 		Bundle lBundle = new Bundle();
 		int loopCount = bundle.getInt(Common.KEY_SETTING_TO_ACTIVITY_LOOPCOUNT);
-		boolean playOnlyPCMData = bundle.getBoolean(Common.KEY_SETTING_TO_ACTIVITY_PLAYONLYPCMDATA);
 
 		lBundle.putInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT, loopCount);
-		lBundle.putBoolean(Common.KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA, playOnlyPCMData);
 
 		boolean rootDirectoryChanged = !bundle.getString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY).equals(rootDirectory);
 		rootDirectory = bundle.getString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY);

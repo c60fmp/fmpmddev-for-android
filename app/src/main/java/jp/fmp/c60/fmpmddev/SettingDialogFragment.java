@@ -10,10 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -51,14 +49,12 @@ class ArrayAdapterExtDir extends ArrayAdapter<ExtDirItem> {
 }
 
 
-public class SettingDialogFragment extends DialogFragment implements LinearLayout.OnClickListener, Switch.OnCheckedChangeListener, AdapterView.OnItemClickListener, FragmentResultListener {
+public class SettingDialogFragment extends DialogFragment implements LinearLayout.OnClickListener, AdapterView.OnItemClickListener, FragmentResultListener {
 
     // SettingDialog Fragment Tag
     public static final String SETTINGDIALOG_FRAGMENT_TAG   = "SettingDialogFragment";
 
     private static final String KEY_LOCAL_LOOPCOUNT         = "localLoopCount";
-
-    private static final String KEY_LOCAL_PLAYONLYPCMDATA   = "localPlayOnlyPCMData";
 
     private static final String KEY_LOCAL_ROOTDIRECTORY     = "localRootDirectory";
 
@@ -100,7 +96,6 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
         super.onCreateDialog(savedInstanceState);
 
         bundle.putInt(KEY_LOCAL_LOOPCOUNT, getArguments().getInt(Common.KEY_ACTIVITY_TO_SETTING_LOOPCOUNT));
-        bundle.putBoolean(KEY_LOCAL_PLAYONLYPCMDATA, getArguments().getBoolean(Common.KEY_ACTIVITY_TO_SETTING_PLAYONLYPCMDATA));
         bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
         bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY, new ExtDirItem[0]));
 
@@ -113,10 +108,6 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
 
         TextView textView = settingView.findViewById(R.id.textViewLoopCount);
         textView.setText(String.valueOf(bundle.getInt(KEY_LOCAL_LOOPCOUNT)));
-
-        Switch sw = settingView.findViewById(R.id.playingPCMdataSwitch);
-        sw.setChecked(bundle.getBoolean(KEY_LOCAL_PLAYONLYPCMDATA));
-        sw.setOnCheckedChangeListener(this);
 
         ListView listView = settingView.findViewById(R.id.listview_setting);
         listView.setOnItemClickListener(this);
@@ -135,7 +126,6 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
                     // OK
                     Bundle lBundle = new Bundle();
                     lBundle.putInt(Common.KEY_SETTING_TO_ACTIVITY_LOOPCOUNT, bundle.getInt(KEY_LOCAL_LOOPCOUNT));
-                    lBundle.putBoolean(Common.KEY_SETTING_TO_ACTIVITY_PLAYONLYPCMDATA, bundle.getBoolean(KEY_LOCAL_PLAYONLYPCMDATA));
                     lBundle.putString(Common.KEY_SETTING_TO_ACTIVITY_ROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
                     lBundle.putSerializable(Common.KEY_SETTING_TO_ACTIVITY_PCMEXTDIRECTORY, Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]));
                     listener.onDialogPositiveClick(lBundle);
@@ -165,13 +155,6 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
 
         getParentFragmentManager().setFragmentResultListener(Common.KEY_NUMPICKER_TO_SETTING_FRAGMENTRESULT, this, this);
         numPickerDialogFragment.show(getActivity().getSupportFragmentManager(), NumPickerDialogFragment.NUMPICKERDIALOG_FRAGMENT_TAG);
-    }
-
-
-    @Override
-    // Swtich を変更したときのイベント
-    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-        this.bundle.putBoolean(KEY_LOCAL_PLAYONLYPCMDATA, b);
     }
 
 
