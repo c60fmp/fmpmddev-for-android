@@ -1,8 +1,8 @@
 //#############################################################################
 //		dispatcher.h
 //
-//		Copyright (C)2020 by C60
-//		Last Updated : 2023/12/10
+//		Copyright (C)2020-2024 by C60
+//		Last Updated : 2024/01/04
 //
 //#############################################################################
 
@@ -20,12 +20,9 @@ extern "C" JNIEXPORT jobjectArray JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_ge
 extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1load(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename);
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1start(JNIEnv *env, jobject thiz);
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1stop(JNIEnv *env, jobject thiz);
-extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fadeout2(JNIEnv *env, jobject thiz, jint speed);
 extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_setpos(JNIEnv *env, jobject thiz, jint pos);
 extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getpos(JNIEnv *env, jobject thiz);
-extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz,
-                                                                                  jobject jfileio, jstring filename,
-                                                                                  jobject length, jobject loop);
+extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename);
 extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgettitle(JNIEnv *env, jobject thiz,
                                                                                 jobject jfileio, jstring filename);
 extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz);

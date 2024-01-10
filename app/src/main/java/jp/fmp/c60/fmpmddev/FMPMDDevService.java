@@ -1,8 +1,5 @@
 package jp.fmp.c60.fmpmddev;
 
-import static android.media.MediaMetadata.METADATA_KEY_DURATION;
-import static android.media.MediaMetadata.METADATA_KEY_TITLE;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -50,6 +47,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static android.media.MediaMetadata.METADATA_KEY_DURATION;
+import static android.media.MediaMetadata.METADATA_KEY_TITLE;
 
 
 public class FMPMDDevService extends MediaBrowserServiceCompat {
@@ -230,16 +230,13 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETSETTINGS) {
 				// Activity で設定されたループ数、PCM 等のディレクトリを Dispatcher 等に設定する
 				service.loopCount = msg.getData().getInt(Common.KEY_ACTIVITY_TO_SERVICE_LOOPCOUNT);
+				dispatcher.setloopcount(service.loopCount);
 				service.playOnlyPCMData = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_PLAYONLYPCMDATA, true);
 
 				HashMap<String, String> tempHashMap = Common.suppressSerializable(msg.getData(), Common.KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY, new HashMap<>());
 				if(service.extHashmap.equals(tempHashMap)) {
-					// 局長変更処理
-					// ToDo diapatcher 側に移動
-					MutableInt length = new MutableInt();
-					MutableInt loop = new MutableInt();
-					dispatcher.fgetlength(jfileio, playFilename, length, loop);
-					musiclength = length.getValue() + loop.getValue() * (loopCount - 1) + 1000;
+					// 曲長変更処理
+					musiclength = dispatcher.fgetlength(jfileio, playFilename) + 1000;
 					setMusicMetadata();
 					return;
 				}
@@ -898,10 +895,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// dispatcher で読み込み、再生
 		if (dispatcher.music_load(jfileio, playFilename) == 0) {
-			MutableInt length = new MutableInt();
-			MutableInt loop = new MutableInt();
-			dispatcher.fgetlength(jfileio, playFilename, length, loop);
-			musiclength = length.getValue() + loop.getValue() * (loopCount - 1) + 1000;
+			musiclength = dispatcher.fgetlength(jfileio, playFilename) + 1000;
 
 			// タイトルを取得
 			if(playMusicList.get(playMusicNum).getDescription().getTitle() == null) {

@@ -1,8 +1,8 @@
 //#############################################################################
 //		dispatcher_mxdrv.h
 //
-//		Copyright (C)2022 by C60
-//		Last Updated : 2023/12/10
+//		Copyright (C)2022-2024 by C60
+//		Last Updated : 2024/01/04
 //
 //#############################################################################
 
@@ -25,7 +25,8 @@ public:
 	int music_load(TCHAR *filename);
 	void music_start(void);
 	void music_stop(void);
-	bool fgetlength(TCHAR *filename, int *length, int *loop);
+	void setloopcount(int count);
+	int fgetlength(TCHAR *filename, bool& loop);
 	uint8_t * fgettitle(uint8_t *dest, TCHAR *filename);
 	uint8_t * gettitle(uint8_t *dest);
 	int getpos(void);

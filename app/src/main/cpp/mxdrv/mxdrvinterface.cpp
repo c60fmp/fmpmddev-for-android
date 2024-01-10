@@ -11,6 +11,7 @@ MXDRVInterface::MXDRVInterface()
 	mxdrv = new MXDRV;
 	memset(pdxpath, 0, sizeof(pdxpath));
 	memset(mdxtitle, 0, sizeof(mdxtitle));
+	loopcount = 1;
 
 	fileio = new FileIO();
 	fileio->AddRef();
@@ -187,16 +188,23 @@ int MXDRVInterface::LoadMDXSub(
 }
 
 
-int MXDRVInterface::fgetlength(const TCHAR* mdxfilename, int* length) {
-	int result = LoadMDXSub(mdxfilename, false);
-	if(result) {
-		*length = 0;
-		return(result);
-	}
+int MXDRVInterface::fgetlength(const TCHAR* mdxfilename, bool& loop) {
+    int result = LoadMDXSub(mdxfilename, false);
+    if(result) {
+        loop = false;
+        return -1;
+    }
 
-	// 演奏時間計測
-	*length = mxdrv->MXDRV_MeasurePlayTime(1, 0);
-	return(result);
+    // 演奏時間計測
+	int length1 = mxdrv->MXDRV_MeasurePlayTime(1, false);
+	int length2 = mxdrv->MXDRV_MeasurePlayTime(2, false);
+	loop = (length1 < length2);
+
+    int length = length1 - 2000 + (length2 - length1) * (loopcount - 1);
+	if(length < 1000) {
+		length = 1000;
+	}
+	return length;
 }
 
 
@@ -234,7 +242,7 @@ uint8_t* MXDRVInterface::gettitle(uint8_t *dest) {
 			// 全角文字
 			*q++ = *p++;
 			*q++ = *p++;
-		} else if(*p != 0x80) {
+		} else if((uint8_t)*p != 0x80) {
 			// 半角文字
 			*q++ = *p++;
 		} else {
@@ -268,7 +276,7 @@ uint8_t* MXDRVInterface::gettitle(uint8_t *dest) {
 			// 0x80 で始まる文字
 			p++;	// 0x80 を飛ばす
 
-			if(*p < 0x80) {
+			if((uint8_t)*p < 0x80) {
 				// 7バイト範囲内の場合、そのままコピー
 				*q++ = *p++;
 			} else {
@@ -289,6 +297,11 @@ int MXDRVInterface::loadmdx(const TCHAR* mdxfilename)
 	return LoadMDXSub(mdxfilename, true);
 }
 
+
+void MXDRVInterface::setloopcount(int count)
+{
+	this->loopcount = count;
+}
 
 int MXDRVInterface::getpcm(int16_t* buf, int len)
 {

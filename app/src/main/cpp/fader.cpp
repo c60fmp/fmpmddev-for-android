@@ -2,8 +2,8 @@
 //		fader.cpp
 //
 //
-//		Copyright (C)2021 by C60
-//		Last Updated : 2021/05/05
+//		Copyright (C)2021-2024 by C60
+//		Last Updated : 2024/01/04
 //
 //#############################################################################
 
@@ -15,10 +15,11 @@
 //=============================================================================
 Fader::Fader(IDISPATCHER* dispatcher)
 {
+    memset(filename, '\0', sizeof(filename));
     fadebuf.resize(DEFAULT_FADE_BUFFER_SIZE);
     this->dispatcher = dispatcher;
+    loopcount = 1;
     length = 0;
-    loop = 0;
     fpos = 60 * 1000;
 }
 
@@ -41,40 +42,23 @@ void Fader::setdispatcher(IDISPATCHER *dispatcher)
 
 
 //=============================================================================
-//	初期化
-//=============================================================================
-bool Fader::init(IFILEIO* fileio)
-{
-    return true;
-}
-
-
-//=============================================================================
-//	対応している拡張子を返す(Faderは関係ないので空配列を返す)
-// =============================================================================
-const std::vector<const TCHAR*> Fader::supportedext(void)
-{
-    return supportedexts;
-}
-
-
-//=============================================================================
-//	対応しているPCMの拡張子を返す(Faderは関係ないので空配列を返す)
-// =============================================================================
-const std::vector<const TCHAR*> Fader::supportedpcmext(void)
-{
-    return supportedpcmexts;
-}
-
-
-//=============================================================================
 //	曲の読み込みその１（ファイルから）
 //=============================================================================
 int Fader::music_load(TCHAR *filename)
 {
+    /*
+    int loop = 0;
     dispatcher->fgetlength(filename, &length, &loop);
-    fpos = length;
     if(loop != 0) {
+        length += FADEOUT_TIME;
+    }
+    fpos = length;
+    */
+
+    strcpy(this->filename, filename);
+    bool loop = false;
+    fpos = length = dispatcher->fgetlength(filename, loop);
+    if(loop) {
         length += FADEOUT_TIME;
     }
 
@@ -87,6 +71,7 @@ int Fader::music_load(TCHAR *filename)
 //=============================================================================
 void Fader::music_start(void)
 {
+    dispatcher->setloopcount(this->loopcount);
     dispatcher->music_start();
 }
 
@@ -101,25 +86,27 @@ void Fader::music_stop(void)
 
 
 //=============================================================================
-//	曲の長さの取得(pos : ms)
+//	ループ回数設定
 //=============================================================================
-bool Fader::fgetlength(TCHAR *filename, int *length, int *loop)
+void Fader::setloopcount(int count)
 {
-    bool result = dispatcher->fgetlength(filename, length, loop);
-    if(*loop != 0) {
-        *length += FADEOUT_TIME;
+    this->loopcount = count;
+    dispatcher->setloopcount(count);
+
+    /*
+    // ToDo 異常終了のため、仮で無効化
+    bool loop = false;
+    fpos = length = dispatcher->fgetlength(filename, loop);
+    if(fpos < 0) {
+        fpos = 60 * 1000;
+        length = 0;
+        return;
     }
 
-    return result;
-}
-
-
-//=============================================================================
-//	Title取得
-//=============================================================================
-uint8_t * Fader::fgettitle(uint8_t *dest, TCHAR *filename)
-{
-    return dispatcher->fgettitle(dest, filename);
+    if(loop) {
+        length += FADEOUT_TIME;
+    }
+    */
 }
 
 

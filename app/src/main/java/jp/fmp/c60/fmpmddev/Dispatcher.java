@@ -44,8 +44,8 @@ public class Dispatcher {
 	public native void music_start();
 	public native void music_stop();
 
-	public native void fadeout2(int speed);
-	public native boolean fgetlength(JFileIO jfileio, String filename, MutableInt length, MutableInt loop);
+	public native void setloopcount(int count);
+	public native int fgetlength(JFileIO jfileio, String filename);
 	public native String fgettitle(JFileIO jfileio, String filename);
 	public native String gettitle();
 	public native void setpos(int pos);

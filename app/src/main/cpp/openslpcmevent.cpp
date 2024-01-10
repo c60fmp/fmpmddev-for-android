@@ -2,8 +2,8 @@
 //		openslpcmevent.cpp
 //		（IOpenSLPCMEventの具象クラス)
 //
-//		Copyright (C)2014-2020 by C60
-//		Last Updated : 2020/12/06
+//		Copyright (C)2014-2024 by C60
+//		Last Updated : 2024/01/10
 //
 //#############################################################################
 
@@ -22,7 +22,7 @@
 //		なし
 //
 //=============================================================================
-OpenSLPCMEvent::OpenSLPCMEvent(void) : mDriver(NULL)
+OpenSLPCMEvent::OpenSLPCMEvent(void) : mFader(NULL)
 {
 }
 
@@ -35,25 +35,25 @@ OpenSLPCMEvent::OpenSLPCMEvent(void) : mDriver(NULL)
 //=============================================================================
 OpenSLPCMEvent::~OpenSLPCMEvent(void)
 {
-	if(mDriver != NULL) {
-		mDriver = NULL;
+	if(mFader != NULL) {
+		mFader = NULL;
 	}
 }
 
 
 //=============================================================================
-// ドライバ設定
+// Fader設定
 //	input
-//		driver : ドライバ
+//		fader : Fader
 //
 //=============================================================================
-void OpenSLPCMEvent::SetDriver(IDISPATCHER* driver)
+void OpenSLPCMEvent::SetFader(Fader* fader)
 {
-	if(mDriver != NULL) {
-		mDriver = NULL;
+	if(mFader != NULL) {
+		mFader = NULL;
 	}
 
-	mDriver = driver;
+	mFader = fader;
 }
 
 
@@ -65,7 +65,7 @@ void OpenSLPCMEvent::OnBufferEmpty(void* buffer, unsigned int& size)
 // 	__android_log_print(ANDROID_LOG_DEBUG, "Tag", "OpenSLPCMEvent_%s", "OnBufferEmpty");
 // 	__android_log_print(ANDROID_LOG_DEBUG, "Tag", "OpenSLPCMEvent_buffer = %p", buffer);
 // 	__android_log_print(ANDROID_LOG_DEBUG, "Tag", "OpenSLPCMEvent_size = %d", size);
-	mDriver->getpcmdata((int16_t*)buffer, size / 2 / 2);
+	mFader->getpcmdata((int16_t*)buffer, size / 2 / 2);
 }
 
 void OpenSLPCMEvent::OnPlayStart(void)

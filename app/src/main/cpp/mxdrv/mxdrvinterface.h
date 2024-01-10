@@ -27,7 +27,8 @@ public:
 
 	void setpdxpath(const TCHAR* pdxpath);
 	int loadmdx(const TCHAR* mdxfilename);
-	int fgetlength(const TCHAR* mdxfilename, int* length);
+	void setloopcount(int count);
+	int fgetlength(const TCHAR* mdxfilename, bool& loop);
 	int getpos(void);
 	void setpos(int pos);
     uint8_t* fgettitle(uint8_t *dest, TCHAR *mdxfilename);
@@ -40,6 +41,7 @@ private:
 	char mdxtitle[MAX_LOADSTRING];
 	int havepdx = 0;
 	TCHAR pdxpath[_MAX_PATH + 1];
+	int loopcount;
 
 	FileIO* fileio;
 	IFILEIO* pfileio;

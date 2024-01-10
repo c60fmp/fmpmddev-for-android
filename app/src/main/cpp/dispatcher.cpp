@@ -2,8 +2,8 @@
 //		dispatcher.cpp
 //
 //
-//		Copyright (C)2020 by C60
-//		Last Updated : 2023/12/10
+//		Copyright (C)2020-2024 by C60
+//		Last Updated : 2024/01/10
 //
 //#############################################################################
 
@@ -23,6 +23,7 @@
 
 std::vector<IDISPATCHER*> dispatchermanager;
 
+int                 loopcount = 1;
 Fader*              fader = NULL;
 DFileIO*            fileio = NULL;
 OpenSLPCM*		    openslpcm = NULL;
@@ -84,7 +85,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_init(J
     }
 
 	openslpcmevent = new OpenSLPCMEvent();
-    openslpcmevent->SetDriver(fader);
+    openslpcmevent->SetFader(fader);
 
     openslpcm = new OpenSLPCM(*openslpcmevent);
 
@@ -271,11 +272,13 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1sto
 
 
 //=============================================================================
-//	フェードアウト(高音質)
+//	ループ回数の設定
 //=============================================================================
-extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fadeout2(JNIEnv *env, jobject thiz, jint speed)
-{
-    //@ fader->fadeout2(speed);
+extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_setloopcount(JNIEnv *env, jobject thiz, jint count) {
+    for(auto& m :dispatchermanager) {
+        m->setloopcount(count);
+    }
+    fader->setloopcount(count);
 }
 
 
@@ -304,16 +307,11 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getpos(JNI
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz,
-                                            jobject jfileio, jstring filename,
-                                            jobject length, jobject loop)
-{
-    jboolean result = false;
+extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename) {
+    jint result = -1;
 
     if (fileio != NULL && fader != NULL) {
         fileio->SetObj(env, jfileio);
-
-        int length2, loop2;
 
         const TCHAR *cfilename = env->GetStringUTFChars(filename, NULL);
         FilePath    filepath;
@@ -332,20 +330,19 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetle
             }
 
             if(flag) {
-                result = m->fgetlength(const_cast<TCHAR *>(cfilename), &length2, &loop2);
-                if(result) {
+                bool loop2 = false;
+                int length2 = m->fgetlength(const_cast<TCHAR *>(cfilename), loop2);
+                if(length2 >= 0) {
+                    if(loop2) {
+                        length2 += FADEOUT_TIME;
+                    }
+                    result = length2;
                     break;
                 }
             }
         }
 
         env->ReleaseStringUTFChars(filename, cfilename);
-
-        jclass clsj = env->FindClass("jp/fmp/c60/fmpmddev/MutableInt");
-        jmethodID id = env->GetMethodID(clsj, "setValue", "(I)V");
-
-        env->CallVoidMethod(length, id, length2);
-        env->CallVoidMethod(loop, id, loop2);
     }
     return result;
 }

@@ -2,8 +2,8 @@
 //		openslpcmevent.h
 //		（IOpenSLPCMEventの具象クラス)
 //
-//		Copyright (C)2014-2020 by C60
-//		Last Updated : 2020/12/06
+//		Copyright (C)2014-2024 by C60
+//		Last Updated : 2024/01/10
 //
 //#############################################################################
 
@@ -11,13 +11,13 @@
 #define	__OPENSLPCMEVENT_H__
 
 #include "iopenslpcmevent.h"
-#include "idispatcher.h"
+#include "fader.h"
 
 
 class OpenSLPCMEvent : public IOpenSLPCMEvent
 {
 private:
-	IDISPATCHER* mDriver;
+	Fader* mFader;
 
 public:
 	virtual void OnBufferEmpty(void* buffer, unsigned int& size);	// バッファが空になった
@@ -28,7 +28,7 @@ public:
 	OpenSLPCMEvent(void);
 	~OpenSLPCMEvent(void);
 
-	void SetDriver(IDISPATCHER* driver);
+	void SetFader(Fader* fader);
 };
 
 
