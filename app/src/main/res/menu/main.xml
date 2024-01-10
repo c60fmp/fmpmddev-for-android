@@ -2,5 +2,5 @@
   xmlns:android="http://schemas.android.com/apk/res/android">
 	<item
 		android:id="@+id/menu"
-		android:title="@string/menu_setdirectory" />
+		android:title="@string/menu_settings" />
 </menu>
