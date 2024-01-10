@@ -53,7 +53,7 @@ public class NumPickerDialogFragment extends DialogFragment implements NumberPic
 
         NumberPicker np = numPickerView.findViewById(R.id.numberPicker);
         np.setMinValue(1);
-        np.setMaxValue(99);
+        np.setMaxValue(9);
         np.setValue(getArguments().getInt(Common.KEY_SETTING_TO_NUMPICKER_VALUE));
         np.setOnValueChangedListener(this);
 
