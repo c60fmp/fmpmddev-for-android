@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2022-2024 by C60
-//		Last Updated : 2024/01/04
+//		Last Updated : 2024/01/11
 //
 //#############################################################################
 
@@ -123,21 +123,11 @@ void DISPATCHER_MXDRV::music_stop(void)
 
 
 //=============================================================================
-//	ループ回数設定
-//=============================================================================
-void DISPATCHER_MXDRV::setloopcount(int count)
-{
-	mxdrvinterface->setloopcount(count);
-	mxdrvinterface_2->setloopcount(count);
-}
-
-
-//=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-int DISPATCHER_MXDRV::fgetlength(TCHAR *filename, bool& loop)
+bool DISPATCHER_MXDRV::fgetlength(TCHAR *filename, int *length, int *loop)
 {
-    return mxdrvinterface_2->fgetlength(filename, loop);
+    return mxdrvinterface_2->fgetlength(filename, length, loop);
 }
 
 

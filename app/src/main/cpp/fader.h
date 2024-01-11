@@ -33,12 +33,12 @@ public:
     void getpcmdata(int16_t *buf, int nsamples);
 
 private:
-    TCHAR filename[_MAX_PATH];
     IDISPATCHER* dispatcher;
     std::vector<int16_t> fadebuf;
 
     int     loopcount;                  // ループカウント数
-    int     length;                     // 演奏中の曲の長さ
+    int     length;                     // 演奏中の曲の長さ(ループ以外、１ループ)
+    int     loop;                       // 演奏中の曲の長さ(ループ部分、１ループ)
     int64_t fpos;						// fadeout 開始時間(ms)
 };
 

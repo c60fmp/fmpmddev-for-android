@@ -2,7 +2,7 @@
 //		idispatcher.h
 //
 //		Copyright (C)2021-2024 by C60
-//		Last Updated : 2024/01/04
+//		Last Updated : 2024/01/11
 //
 //#############################################################################
 
@@ -24,8 +24,7 @@ struct IDISPATCHER {
 	virtual int music_load(TCHAR *filename) = 0;
 	virtual void music_start(void) = 0;
 	virtual void music_stop(void) = 0;
-	virtual void setloopcount(int count) = 0;
-	virtual int fgetlength(TCHAR *filename, bool& loop) = 0;
+	virtual bool fgetlength(TCHAR *filename, int *length, int *loop) = 0;
 	virtual uint8_t * fgettitle(uint8_t *dest, TCHAR *filename) = 0;
 	virtual uint8_t * gettitle(uint8_t *dest) = 0;
 	virtual int getpos(void) = 0;

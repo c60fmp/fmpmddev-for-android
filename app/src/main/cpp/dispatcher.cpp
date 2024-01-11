@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2020-2024 by C60
-//		Last Updated : 2024/01/10
+//		Last Updated : 2024/01/11
 //
 //#############################################################################
 
@@ -24,6 +24,8 @@
 std::vector<IDISPATCHER*> dispatchermanager;
 
 int                 loopcount = 1;
+int                 length = 0;
+int                 loop = 0;
 Fader*              fader = NULL;
 DFileIO*            fileio = NULL;
 OpenSLPCM*		    openslpcm = NULL;
@@ -33,7 +35,8 @@ OpenSLPCMEvent*     openslpcmevent = NULL;
 //=============================================================================
 //	Dispatcher生成
 //=============================================================================
-void createdispatcher(void) {
+void createdispatcher(void)
+{
     if(dispatchermanager.size() == 0) {
         dispatchermanager.push_back(new DISPATCHER_PMDWIN());
         dispatchermanager.push_back(new DISPATCHER_MXDRV());
@@ -111,7 +114,8 @@ extern "C" JNIEXPORT jboolean JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_init(J
 //=============================================================================
 //	終了処理
 //=============================================================================
-extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_exit(JNIEnv *env, jobject thiz) {
+extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_exit(JNIEnv *env, jobject thiz)
+{
     if(openslpcm != NULL) {
         openslpcm->Stop();
     }
@@ -251,7 +255,8 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1loa
 //=============================================================================
 //	演奏開始
 //=============================================================================
-extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1start(JNIEnv *env, jobject thiz) {
+extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1start(JNIEnv *env, jobject thiz)
+{
     if (fader != NULL && openslpcm != NULL) {
         fader->music_start();
         openslpcm->Play();
@@ -274,10 +279,9 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_music_1sto
 //=============================================================================
 //	ループ回数の設定
 //=============================================================================
-extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_setloopcount(JNIEnv *env, jobject thiz, jint count) {
-    for(auto& m :dispatchermanager) {
-        m->setloopcount(count);
-    }
+extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_setloopcount(JNIEnv *env, jobject thiz, jint count)
+{
+    loopcount = count;
     fader->setloopcount(count);
 }
 
@@ -307,44 +311,42 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getpos(JNI
 //=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename) {
-    jint result = -1;
+extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength(JNIEnv *env, jobject thiz, jobject jfileio, jstring filename)
+{
+    if (fileio == NULL && fader == NULL) {
+        return 0;
+    }
 
-    if (fileio != NULL && fader != NULL) {
-        fileio->SetObj(env, jfileio);
+    fileio->SetObj(env, jfileio);
 
-        const TCHAR *cfilename = env->GetStringUTFChars(filename, NULL);
-        FilePath    filepath;
-        TCHAR ext[_MAX_PATH];
-        filepath.Extractpath(ext, cfilename, filepath.extractpath_ext);
+    const TCHAR *cfilename = env->GetStringUTFChars(filename, NULL);
+    FilePath    filepath;
+    TCHAR ext[_MAX_PATH];
+    filepath.Extractpath(ext, cfilename, filepath.extractpath_ext);
 
-        for(auto& m :dispatchermanager) {
-            auto e = m->supportedext();
+    for(auto& m :dispatchermanager) {
+        auto e = m->supportedext();
 
-            bool flag = false;
-            for(auto& it : e) {
-                if(filepath.Stricmp(ext, it) == 0) {
-                    flag = true;
-                    break;
-                }
-            }
-
-            if(flag) {
-                bool loop2 = false;
-                int length2 = m->fgetlength(const_cast<TCHAR *>(cfilename), loop2);
-                if(length2 >= 0) {
-                    if(loop2) {
-                        length2 += FADEOUT_TIME;
-                    }
-                    result = length2;
-                    break;
-                }
+        bool flag = false;
+        for(auto& it : e) {
+            if(filepath.Stricmp(ext, it) == 0) {
+                flag = true;
+                break;
             }
         }
 
-        env->ReleaseStringUTFChars(filename, cfilename);
+        if(flag) {
+            length = loop = 0;
+            if(m->fgetlength(const_cast<TCHAR *>(cfilename), &length, &loop)) {
+                if(loop > 0) {
+                    length += loop * (loopcount - 1) + FADEOUT_TIME;
+                }
+            }
+        }
     }
-    return result;
+
+    env->ReleaseStringUTFChars(filename, cfilename);
+    return length;
 }
 
 
@@ -352,7 +354,8 @@ extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgetlength
 //	Title取得
 // ============================================================================
 extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgettitle(JNIEnv *env, jobject thiz,
-                                            jobject jfileio, jstring filename) {
+                                            jobject jfileio, jstring filename)
+{
     uint8_t dest[TITLE_BUFFER_SIZE] = {};
 
     if (fileio != NULL && fader != NULL) {
@@ -388,7 +391,8 @@ extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_fgettit
 //=============================================================================
 //	現在演奏している曲のTitle取得
 // ============================================================================
-extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz) {
+extern "C" JNIEXPORT jstring JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_gettitle(JNIEnv *env, jobject thiz)
+{
     uint8_t dest[TITLE_BUFFER_SIZE] = {};
     fader->gettitle(dest);
     return env->NewStringUTF(reinterpret_cast<const char *>(dest));
@@ -431,7 +435,8 @@ extern "C" JNIEXPORT void JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_resume(JNI
 //=============================================================================
 //	Status取得
 // ============================================================================
-extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getstatus(JNIEnv *env, jobject thiz) {
+extern "C" JNIEXPORT jint JNICALL Java_jp_fmp_c60_fmpmddev_Dispatcher_getstatus(JNIEnv *env, jobject thiz)
+{
     jint result = OpenSLPCM::STATUS_NONE;
     if(openslpcm !=  NULL) {
         result = openslpcm->GetStatus();

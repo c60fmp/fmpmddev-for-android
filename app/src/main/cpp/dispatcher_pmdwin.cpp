@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2021-2024 by C60
-//		Last Updated : 2024/01/04
+//		Last Updated : 2024/01/11
 //
 //#############################################################################
 
@@ -20,7 +20,6 @@ DISPATCHER_PMDWIN::DISPATCHER_PMDWIN()
 	pthread_mutex_init(&mutex_pmdwin, NULL);
 	pmdwin = NULL;
 	pmdwin2 = NULL;
-	loopcount = 1;
 }
 
 
@@ -140,30 +139,11 @@ void DISPATCHER_PMDWIN::music_stop(void)
 
 
 //=============================================================================
-//	ループ回数設定
-//=============================================================================
-void DISPATCHER_PMDWIN::setloopcount(int count)
-{
-	this->loopcount = count;
-}
-
-
-//=============================================================================
 //	曲の長さの取得(pos : ms)
 //=============================================================================
-int DISPATCHER_PMDWIN::fgetlength(TCHAR *filename, bool& loop)
+bool DISPATCHER_PMDWIN::fgetlength(TCHAR *filename, int *length, int *loop)
 {
-	int length2 = -1;
-	int loop2 = -1;
-
-	bool result = pmdwin2->getlength(filename, &length2, &loop2);
-	if(!result || length2 < 0) {
-		loop = false;
-		return -1;
-	}
-
-    loop = (loop2 != 0);
-	return length2 + loop2 * (loopcount - 1);
+	return pmdwin2->getlength(filename, length, loop);
 }
 
 
@@ -244,5 +224,3 @@ void DISPATCHER_PMDWIN::getpcmdata(int16_t *buf, int nsamples)
 	pmdwin->getpcmdata(buf, nsamples);
 	pthread_mutex_unlock(&mutex_pmdwin);
 }
-
-

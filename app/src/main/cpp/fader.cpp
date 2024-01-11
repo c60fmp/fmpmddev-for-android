@@ -3,7 +3,7 @@
 //
 //
 //		Copyright (C)2021-2024 by C60
-//		Last Updated : 2024/01/04
+//		Last Updated : 2024/01/11
 //
 //#############################################################################
 
@@ -15,11 +15,11 @@
 //=============================================================================
 Fader::Fader(IDISPATCHER* dispatcher)
 {
-    memset(filename, '\0', sizeof(filename));
     fadebuf.resize(DEFAULT_FADE_BUFFER_SIZE);
     this->dispatcher = dispatcher;
     loopcount = 1;
     length = 0;
+    loop = 0;
     fpos = 60 * 1000;
 }
 
@@ -46,21 +46,8 @@ void Fader::setdispatcher(IDISPATCHER *dispatcher)
 //=============================================================================
 int Fader::music_load(TCHAR *filename)
 {
-    /*
-    int loop = 0;
     dispatcher->fgetlength(filename, &length, &loop);
-    if(loop != 0) {
-        length += FADEOUT_TIME;
-    }
-    fpos = length;
-    */
-
-    strcpy(this->filename, filename);
-    bool loop = false;
-    fpos = length = dispatcher->fgetlength(filename, loop);
-    if(loop) {
-        length += FADEOUT_TIME;
-    }
+    fpos = length + loop * (loopcount - 1);
 
     return dispatcher->music_load(filename);
 }
@@ -71,7 +58,6 @@ int Fader::music_load(TCHAR *filename)
 //=============================================================================
 void Fader::music_start(void)
 {
-    dispatcher->setloopcount(this->loopcount);
     dispatcher->music_start();
 }
 
@@ -91,7 +77,7 @@ void Fader::music_stop(void)
 void Fader::setloopcount(int count)
 {
     this->loopcount = count;
-    dispatcher->setloopcount(count);
+    fpos = length + loop * (loopcount - 1);
 
     /*
     // ToDo 異常終了のため、仮で無効化
@@ -107,6 +93,8 @@ void Fader::setloopcount(int count)
         length += FADEOUT_TIME;
     }
     */
+
+
 }
 
 
