@@ -100,7 +100,9 @@ const std::vector<const TCHAR*> DISPATCHER_MXDRV::supportedpcmext(void)
 //=============================================================================
 int DISPATCHER_MXDRV::music_load(TCHAR *filename)
 {
-    return mxdrvinterface->loadmdx(filename);
+	//@ mxdrvinterface->end();	// ToDo 仮
+	//@ mxdrvinterface->init();	// ToDo 仮
+	return mxdrvinterface->loadmdx(filename);
 }
 
 

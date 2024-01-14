@@ -1,10 +1,9 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 34
-
     defaultConfig {
         applicationId "jp.fmp.c60.fmpmddev"
+        compileSdk 34
         minSdkVersion 24
         targetSdkVersion 34
         versionCode 1
@@ -26,14 +25,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
-            version "3.10.2"
-        }
-    }
+
     namespace 'jp.fmp.c60.fmpmddev'
-    buildToolsVersion '30.0.3'
 }
 
 dependencies {
@@ -42,7 +35,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.preference:preference:1.2.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

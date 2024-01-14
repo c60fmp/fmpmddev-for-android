@@ -78,23 +78,6 @@ void Fader::setloopcount(int count)
 {
     this->loopcount = count;
     fpos = length + loop * (loopcount - 1);
-
-    /*
-    // ToDo 異常終了のため、仮で無効化
-    bool loop = false;
-    fpos = length = dispatcher->fgetlength(filename, loop);
-    if(fpos < 0) {
-        fpos = 60 * 1000;
-        length = 0;
-        return;
-    }
-
-    if(loop) {
-        length += FADEOUT_TIME;
-    }
-    */
-
-
 }
 
 
