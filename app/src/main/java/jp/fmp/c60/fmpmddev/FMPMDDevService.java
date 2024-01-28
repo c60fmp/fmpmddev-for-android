@@ -59,9 +59,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	// ループ数
 	private static int loopCount							= 1;
 
-	// 通知が許可されていれば true
-	private boolean isAllowPostNotifications				= false;
-
 	// 通知の更新周期(ms)
 	private static final int UPDATE_NOTIFICATION_INTERVAL	= 100;
 
@@ -136,9 +133,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					// Root Directory の設定(設定されている場合)
 					setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
 					// playFilename = "";
-
-					// 通知が許可されているかの設定
-					isAllowPostNotifications = msg.getData().getBoolean(Common.KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS);
 
 					jfileio = new JFileIO(extHashmap, service);
 					dispatcher.init(jfileio);
@@ -518,10 +512,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 	// 通知を更新する
 	private void UpdateNotification() {
-		if(!isAllowPostNotifications) {
-			return;
-		}
-
 		// 通知を更新
 		NotificationResult result = CreateNotificationSub();
 		result.notificationManager.notify(1, result.builder.build());

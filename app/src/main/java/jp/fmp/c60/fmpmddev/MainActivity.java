@@ -61,9 +61,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	// controlFragment に渡す情報を入れる Bundle
 	private final Bundle cBundle = new Bundle();
 
-	// 通知が許可されていれば true
-	private boolean isAllowPostNotifications = true;
-
 	// Service が起動されていれば true
 	private boolean serviceRunning = false;
 
@@ -95,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			try {
 				Bundle lBundle = new Bundle();
 				lBundle.putString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY, rootDirectory);
-				lBundle.putBoolean(Common.KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS, isAllowPostNotifications);
 
 				Message msg = Message.obtain(null, Common.MSG_ACTIVITY_TO_SERVICE_INIT, 0, 0);
 				msg.setData(lBundle);
@@ -310,8 +306,9 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			new ActivityResultCallback<Boolean>() {
 				@Override
 				public void onActivityResult(Boolean isGranted) {
-					isAllowPostNotifications = isGranted;
-					startService();
+					if(isGranted) {
+						startService();
+					}
 				}
 			}
 	);
