@@ -237,6 +237,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					return;
 				}
 
+				extHashmap = tempHashMap;
 				jfileio.SetPath(extHashmap);
 				dispatcher.init(jfileio);
 				savePcmDirectory();
