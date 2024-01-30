@@ -163,6 +163,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 				} else {
 					// Root Directory の設定(設定されている場合)
 					setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
+
+					// 演奏中なら曲データを配信
+					setMusicMetadata();
 				}
 
 				// Activity に初期値を返す

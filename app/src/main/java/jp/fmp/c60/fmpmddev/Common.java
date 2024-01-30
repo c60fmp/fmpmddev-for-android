@@ -32,8 +32,6 @@ public class Common {
 
     public static final String KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY            = "activityToServiceRootDirectroy";
 
-    public static final String KEY_ACTIVITY_TO_SERVICE_ALLOWPOSTNOTIFICATIONS   = "activityToServiceAllowPostNotifications";
-
     public static final String KEY_SERVICE_TO_ACTIVITY_BROWSEDIRECTORY          = "serviceToActivityBrowseDirectroy";
 
     public static final String KEY_ACTIVITY_TO_SERVICE_PCMEXTDIRECTORY          = "activityToServicePCMExtDirectory";
