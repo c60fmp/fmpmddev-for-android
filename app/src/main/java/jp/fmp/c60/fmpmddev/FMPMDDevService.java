@@ -48,9 +48,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static android.media.MediaMetadata.METADATA_KEY_DURATION;
-import static android.media.MediaMetadata.METADATA_KEY_TITLE;
-
 
 public class FMPMDDevService extends MediaBrowserServiceCompat {
 	// ログ用タグ
@@ -178,13 +175,13 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					bundle.putString(Common.KEY_SERVICE_TO_ACTIVITY_BROWSEDIRECTORY, playDirectory);
 					msg2.setData(bundle);
 					msg.replyTo.send(msg2);
+
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_SETROOTDIRECTORY) {
 				setRootDirectory(msg.getData().getString(Common.KEY_ACTIVITY_TO_SERVICE_ROOTDIRECTORY));
-//				playFilename = "";
 
 			} else if (msg.what == Common.MSG_ACTIVITY_TO_SERVICE_PLAY_PREVIOUS) {
 				// 起動時、前回終了時の曲を再生する
@@ -347,13 +344,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 	// 初期値の取得
 	private void initialize() {
-
 		SharedPreferences prefer = PreferenceManager.getDefaultSharedPreferences(this);
-
 		rootDirectory = prefer.getString(Common.KEY_PREFERENCE_ROOTDIRECTORY, "/");
-
 		loopCount = prefer.getInt(Common.KEY_PREFERENCE_LOOPCOUNT, 1);
-
 
 		String[] pcmext = dispatcher.getsupportedpcmext();
 		for (String ext : pcmext) {
@@ -402,6 +395,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		editor.putString(Common.KEY_PREFERENCE_PLAYMEDIAID, playFilename);
 		editor.apply();
 	}
+
 
 	private void setRootDirectory(String rootDirectory) {
 		if(rootDirectory == null) {
@@ -800,21 +794,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			return result;
 		}
 
-		/*
-		BidiMap<String, String> drives = DrivePath.getDrive(getApplicationContext());
-		if (directory.equals("/")) {
-			// ルートディレクトリの場合、ドライブリストを返却
-			for (String drive : drives.keySet()) {
-				MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
-					.setMediaId(drive)
-					.setTitle(drive.substring(1, drive.length() - 1));
-				MediaDescriptionCompat mediadescription = descriptionBuilder.build();
-				result.add(new MediaBrowserCompat.MediaItem(mediadescription, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));
-			}
-			return result;
-		}
-		*/
-
 		List<String> files = listFiles(directory);
 		if (files.size() == 0) {
 			return result;
@@ -942,8 +921,8 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private void setMusicMetadata() {
 		mediaSession.setMetadata(new MediaMetadataCompat.Builder()
 			.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, playMusicList.get(playMusicNum).getDescription().getMediaId())
-			.putString(METADATA_KEY_TITLE, (String)playMusicList.get(playMusicNum).getDescription().getTitle())
-			.putLong(METADATA_KEY_DURATION, musiclength)
+			.putString(android.media.MediaMetadata.METADATA_KEY_TITLE, (String)playMusicList.get(playMusicNum).getDescription().getTitle())
+			.putLong(android.media.MediaMetadata.METADATA_KEY_DURATION, musiclength)
 			.build());
 	}
 
@@ -1193,15 +1172,6 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 			}
 		}
 
-/*
-		// 同一ディレクトリの最初まで到達した場合、サブディレクトリに入る
-		if(dirFiles.size() > 0 && downdirectory) {
-			String result = skiptoprevioussub(dirFiles.get(dirFiles.size() - 1).getAbsolutePath() + "/", true, true);
-			if (!result.isEmpty()) {
-				return result;
-			}
-		}
-*/
 		// ディレクトリに対象ファイルがない時の処理
 		if (dirFiles.size() == 0 && musFiles.size() == 0 && downdirectory) {
 			String result = skiptoprevioussub(mediaId, true, false);

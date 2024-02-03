@@ -47,15 +47,14 @@ class ArrayAdapterText<T> extends ArrayAdapter<T> {
     }
 
 
+    @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         View v = super.getView(position, convertView, parent);
 
         TextView tv = v.findViewById( android.R.id.text1 );
         if(position == this.position) {
-            if(getContext() != null) {
-                tv.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
-            }
+            tv.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
         } else {
             tv.setTextColor(ContextCompat.getColor(getContext(), R.color.colorBackground));
         }
@@ -137,6 +136,12 @@ class ItemPos {
         }
     }
 
+
+    public void setValue(int top, int y) {
+        this.top = top;
+        this.y = y;
+    }
+
     public int getTop() {
         return top;
     }
@@ -189,7 +194,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
 
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         try {
             // Instantiate the SettingDialogListener so we can send events to the host
@@ -252,7 +257,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             if (children != null) {
                 for (MediaBrowserCompat.MediaItem child : children) {
                     if (child.isBrowsable()) {
-                        adapter.add((String)child.getDescription().getTitle() + File.separator);
+                        adapter.add(child.getDescription().getTitle() + File.separator);
                     } else {
                         adapter.add(DrivePath.getFilename(Uri.decode(child.getDescription().getMediaId())));
                     }
@@ -267,11 +272,12 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
         TextView textView = getView().findViewById(R.id.directoryname);
         textView.setText(DrivePath.getDisplayPath(directory));
 
-        this.bundle.putString(KEY_LOCAL_BROWSEDIRECTORY, directory);
         this.bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, (Serializable)children);
 
         // ListView の表示範囲を設定
         setTopItem(directory, getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID), children);
+
+        this.bundle.putString(KEY_LOCAL_BROWSEDIRECTORY, directory);
     }
 
 
@@ -372,6 +378,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             ListViewPos p = listViewPosmap.get(directory);
             pListViewPos = p.getPos();
             listView.setSelectionFromTop(pListViewPos, p.getTop());
+            itemPos.setValue(pListViewPos, p.getTop());
 
         } else {
             // フォルダ変更なし、または listViewPosmap 未登録の場合、listView の先頭行を基準とする
