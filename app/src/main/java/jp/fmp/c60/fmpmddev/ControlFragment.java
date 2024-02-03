@@ -93,6 +93,60 @@ class ListViewPos {
 }
 
 
+class ItemHeight {
+    int height;
+    int totalHeight;
+
+    public ItemHeight(Fragment fragment) {
+        ListView listView = fragment.getView().findViewById(R.id.listview_control);
+        ListAdapter listAdapter = listView.getAdapter();
+        View listItem = listAdapter.getView(0, null, listView);
+        listItem.measure(
+                View.MeasureSpec.makeMeasureSpec(listView.getMeasuredWidth(), View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        height = listItem.getMeasuredHeight();
+        totalHeight = listView.getHeight();
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getTotalHeight() {
+        return totalHeight;
+    }
+}
+
+
+class ItemPos {
+    int top;
+    int y;
+
+    public ItemPos(Fragment fragment) {
+        ListView listView = fragment.getView().findViewById(R.id.listview_control);
+        top = listView.getFirstVisiblePosition();
+        y = 0;
+        View v = listView.getChildAt(0);
+        if(v != null) {
+            y = v.getTop();
+            ItemHeight itemHeight = new ItemHeight(fragment);
+            while(y < 0 && itemHeight.getHeight() > 0) {
+                top++;
+                y += itemHeight.getHeight();
+            }
+        }
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public int getY() {
+        return y;
+    }
+}
+
+
 public class ControlFragment extends Fragment implements View.OnClickListener, ListView.OnItemClickListener, SeekBar.OnSeekBarChangeListener, OnSubscribedListener {
 
     // Control Fragment Tag
@@ -210,14 +264,14 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             adapter.notifyDataSetChanged();
         }
 
-        // ListView の表示範囲を設定
-        setTopItem(directory, getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID), children);
-
         TextView textView = getView().findViewById(R.id.directoryname);
         textView.setText(DrivePath.getDisplayPath(directory));
 
         this.bundle.putString(KEY_LOCAL_BROWSEDIRECTORY, directory);
         this.bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, (Serializable)children);
+
+        // ListView の表示範囲を設定
+        setTopItem(directory, getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_PLAYMEDIAID), children);
     }
 
 
@@ -296,16 +350,8 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
         String directory = bundle.getString(KEY_LOCAL_BROWSEDIRECTORY);
         if(directory.isEmpty()) return;
 
-        ListView listView = getView().findViewById(R.id.listview_control);
-
-        int p = listView.getFirstVisiblePosition();
-        int y = 0;
-        View v = listView.getChildAt(0);
-        if(v != null) {
-            y = v.getTop();
-        }
-
-        listViewPosmap.put(directory, new ListViewPos(p, y));
+        ItemPos itemPos = new ItemPos(this);
+        listViewPosmap.put(directory, new ListViewPos(itemPos.getTop(), itemPos.getY()));
     }
 
 
@@ -315,19 +361,21 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             return;
         }
 
+        ItemHeight itemHeight = new ItemHeight(this);
+        ItemPos itemPos = new ItemPos(this);
+
         int pListViewPos;
         ListView listView = getView().findViewById(R.id.listview_control);
 
         if(!directory.equals(bundle.getString(KEY_LOCAL_BROWSEDIRECTORY)) && listViewPosmap.containsKey(directory)) {
             // フォルダ変更、かつ listViewPosmap 登録済の場合、その値を基準とする
             ListViewPos p = listViewPosmap.get(directory);
-
             pListViewPos = p.getPos();
             listView.setSelectionFromTop(pListViewPos, p.getTop());
 
         } else {
             // フォルダ変更なし、または listViewPosmap 未登録の場合、listView の先頭行を基準とする
-            pListViewPos = listView.getFirstVisiblePosition();
+            pListViewPos = itemPos.getTop();
         }
 
         // 演奏中の曲番号を解除(＝フォントの色を戻す)
@@ -338,34 +386,30 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
             return;
         }
 
-        // 演奏中の曲番号を設定(→フォントの色を変える)
-        if(directory.equals(getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_ROOTDIRECTORY))) {
-            adapter.setPosition(pos);
-        } else {
-            adapter.setPosition(pos + 1);
+        if(!directory.equals(getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_ROOTDIRECTORY))) {
+            pos++;
         }
 
+        // 演奏中の曲番号を設定(→フォントの色を変える)
+        adapter.setPosition(pos);
+
         // 表示範囲を設定
-        if(listView.getFirstVisiblePosition() > pos) {
+        if(itemPos.getTop() > pos || itemPos.getTop() == pos && itemPos.getY() < LISTVIEW_DISP_DIGIT) {
             // 演奏中の曲が表示範囲より上なら、演奏中の曲を一番上に設定
-            listView.setSelectionFromTop(pos + 1, LISTVIEW_DISP_DIGIT);
-            //@ listViewPosmap.put(bundle.getString(DIRECTORY), new ListViewPos(pos + 1, 10));
+            listView.setSelectionFromTop(pos, LISTVIEW_DISP_DIGIT);
 
-        } else {
-            ListAdapter listAdapter = listView.getAdapter();
-            View listItem = listAdapter.getView(0, null, listView);
-            listItem.measure(
-                    View.MeasureSpec.makeMeasureSpec(listView.getMeasuredWidth(), View.MeasureSpec.EXACTLY),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-            int height = listItem.getMeasuredHeight();
-            int totalHeight = listView.getHeight();
-
-            if(pos + 1 > pListViewPos + totalHeight / height - 1) {
-                // 演奏中の曲が表示範囲より下なら、演奏中の曲を一番下に設定
-                int p = pos + 1 - (totalHeight / height - 1);
-                listView.setSelectionFromTop(p, -LISTVIEW_DISP_DIGIT);
-                //@ listViewPosmap.put(bundle.getString(DIRECTORY), new ListViewPos(p, -10));
+        } else if(itemPos.getY() + (pos - itemPos.getTop() + 1) * itemHeight.getHeight() + LISTVIEW_DISP_DIGIT > itemHeight.getTotalHeight()) {
+            // 演奏中の曲が表示範囲の最下行またはそれより下なら、演奏中の曲を一番下に設定
+            int p = pos + 1 - itemHeight.getTotalHeight() / itemHeight.getHeight();
+            int y2 = itemHeight.getTotalHeight() - itemHeight.getHeight() * (pos - p + 1) - LISTVIEW_DISP_DIGIT;
+            if(y2 < 0) {
+                y2 += itemHeight.getHeight();
+                p--;
             }
+            if(p < 0) {
+                p = y2 = 0;
+            }
+            listView.setSelectionFromTop(p, y2);
         }
     }
 
