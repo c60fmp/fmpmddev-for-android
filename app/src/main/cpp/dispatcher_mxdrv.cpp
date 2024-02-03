@@ -53,25 +53,6 @@ bool DISPATCHER_MXDRV::init(IFILEIO* fileio)
 	mxdrvinterface->setfileio(fileio);
 	mxdrvinterface_2->setfileio(fileio);
 
-    /*
-    //@ 要実装
-    ISETFILEIO* setfileio;
-    if(mxdrvinterface->QueryInterface(IID_IFILESTREAM, (void**)&setfileio) == E_NOINTERFACE) {
-        return false;
-    }
-    setfileio->setfileio(fileio);
-
-    if(mxdrvinterface_2->QueryInterface(IID_IFILESTREAM, (void**)&setfileio) == E_NOINTERFACE) {
-        return false;
-    }
-    setfileio->setfileio(fileio);
-
-    mxdrvinterface_2->Init(NULL);
-    bool result = mxdrvinterface->Init(NULL);
-
-    return result;
-    */
-
 	mxdrvinterface_2->init();
 	return mxdrvinterface->init();
 }
@@ -100,8 +81,6 @@ const std::vector<const TCHAR*> DISPATCHER_MXDRV::supportedpcmext(void)
 //=============================================================================
 int DISPATCHER_MXDRV::music_load(TCHAR *filename)
 {
-	//@ mxdrvinterface->end();	// ToDo 仮
-	//@ mxdrvinterface->init();	// ToDo 仮
 	return mxdrvinterface->loadmdx(filename);
 }
 

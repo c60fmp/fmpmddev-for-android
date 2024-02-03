@@ -113,17 +113,12 @@ void Fader::setpos(int pos)
 //=============================================================================
 void Fader::getpcmdata(int16_t *buf, int nsamples)
 {
-//@    dispatcher->getpcmdata(buf, nsamples);
-
     if(fadebuf.size() < nsamples * 2) {
         fadebuf.resize(nsamples * 2);
     }
 
-    //@ fpos = 2000;    //@ 仮
-
     memset(fadebuf.data(), 0, sizeof(int16_t) * nsamples * 2);
     dispatcher->getpcmdata(fadebuf.data(), nsamples);
-    //@ memcpy(buf, fadebuf.data(), sizeof(int16_t) * nsamples * 2);
 
     int32_t mpos = dispatcher->getpos();
     if(mpos >= fpos) {

@@ -34,7 +34,6 @@ void DFileIO::CacheID(JNIEnv *env, jobject obj)
         method_open = env->GetMethodID(clsj, "Open", "(Ljava/lang/String;I)Z");
         method_close = env->GetMethodID(clsj, "Close", "()V");
         method_read = env->GetMethodID(clsj, "Read", "([BI)I");
-    //@    method_seek = env->GetMethodID(clsj, "Seek", "(ILjp/fmp/c60/pmdwin/JFileIO/SeekMethod;)Z");
         method_seek = env->GetMethodID(clsj, "Seek", "(II)Z");
         method_tellp = env->GetMethodID(clsj, "Tellp", "()I");
     //@ }
@@ -79,10 +78,6 @@ int32_t WINAPI DFileIO::Read(void* dest, int32_t len)
 
 bool WINAPI DFileIO::Seek(int32_t fpos, SeekMethod method)
 {
-//@    jclass clsm = envj->FindClass("jp/fmp/c60/pmdwin/JFileIO$SeekMethod");
-//@    jmethodID cns = envj->GetMethodID(clsm, "<init>", "(I)V");
-//@    jobject obj = envj->NewObject(clsm, cns, (int)method);
-//@    return envj->CallBooleanMethod(objj, method_seek, fpos, obj);
     return envj->CallBooleanMethod(objj, method_seek, fpos, (int)method);
 }
 
