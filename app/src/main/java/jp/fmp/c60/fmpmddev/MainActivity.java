@@ -1,6 +1,7 @@
 package jp.fmp.c60.fmpmddev;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -293,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	);
 
 
+	@TargetApi(Build.VERSION_CODES.TIRAMISU)
 	private void checkNotificationPermission() {
 		if(ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
 			startService();
@@ -494,7 +496,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 
 			// 演奏中の曲と配信された曲が異なる場合は Subscribe し直し
 			if(!playFilename.equals(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID))) {
-				browseDirectory = DrivePath.getDirectory(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
+				browseDirectory = PathUtil.getDirectory(metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID));
 				playFilename = metadata.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
 
 				cBundle.putString(Common.KEY_ACTIVITY_TO_CONTROL_BROWSEDIRECTORY, browseDirectory);
@@ -580,7 +582,7 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			String directory = browseDirectory;
 			if (directory.length() > rootDirectory.length()) {
 				// 親ディレクトリに戻る
-				directory = DrivePath.getParentDirectory(directory);
+				directory = PathUtil.getParentDirectory(directory);
 				browseDirectory = directory;
 
 				// Dialog と View を更新

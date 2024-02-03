@@ -233,7 +233,7 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
         // PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
         ExtDirItem[] extDirItem = Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]);
         for(ExtDirItem it : extDirItem) {
-            if(!DrivePath.isSameTree(bundle.getString(KEY_LOCAL_ROOTDIRECTORY), it.getDirectory())) {
+            if(!PathUtil.isSameTree(bundle.getString(KEY_LOCAL_ROOTDIRECTORY), it.getDirectory())) {
                 it.setDirectory(bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
             }
         }
@@ -260,9 +260,9 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
 
         // ダイアログ表示用のデータ作成
         ExtDirItem[] extDirItem2 = new ExtDirItem[extDirItem.length + 1];
-        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), DrivePath.getDisplayPath(this.bundle.getString(KEY_LOCAL_ROOTDIRECTORY)).replace("|", "/"));
+        extDirItem2[0] = new ExtDirItem(getString(R.string.root_directory_name), PathUtil.getDisplayPath(this.bundle.getString(KEY_LOCAL_ROOTDIRECTORY)).replace("|", "/"));
         for(int i = 0; i < extDirItem.length; i++) {
-            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), DrivePath.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
+            extDirItem2[i + 1] = new ExtDirItem(extDirItem[i].getExtension(), PathUtil.getDisplayPath(extDirItem[i].getDirectory()).replace("|", "/"));
         }
 
         adapter.clear();

@@ -119,7 +119,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
         }
 
         TextView textView = getDialog().findViewById(R.id.directoryname_directorydialog);
-        textView.setText(DrivePath.getDisplayPath(directory));
+        textView.setText(PathUtil.getDisplayPath(directory));
 
         adapter.notifyDataSetChanged();
     }
@@ -132,7 +132,7 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
 
         if(position == 0 && !directory.equals(rootDirectory)) {
             // 親ディレクトリに戻る
-            directory = DrivePath.getParentDirectory(directory);
+            directory = PathUtil.getParentDirectory(directory);
 
             bundle.putString(KEY_LOCAL_DIRECTORY, directory);
 

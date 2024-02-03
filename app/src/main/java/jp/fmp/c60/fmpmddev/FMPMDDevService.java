@@ -359,7 +359,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		if (playFilename.isEmpty()) {
 			playDirectory = rootDirectory;
 		} else {
-			playDirectory = DrivePath.getDirectory(playFilename);
+			playDirectory = PathUtil.getDirectory(playFilename);
 			if (playDirectory.isEmpty()) {
 				playDirectory = rootDirectory;
 			}
@@ -406,13 +406,13 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		this.rootDirectory = rootDirectory;
 
 		// play ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
-		if(!DrivePath.isSameTree(rootDirectory, playDirectory)) {
+		if(!PathUtil.isSameTree(rootDirectory, playDirectory)) {
 			playDirectory = rootDirectory;
 		}
 
 		// PCM ディレクトリ が root directory と同一 tree でない場合、root directory に強制変更
 		for (String key : extHashmap.keySet()) {
-			if (!DrivePath.isSameTree(rootDirectory, extHashmap.get(key))) {
+			if (!PathUtil.isSameTree(rootDirectory, extHashmap.get(key))) {
 				extHashmap.put(key, rootDirectory);
 			}
 		}		
@@ -694,7 +694,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 	private List<String> listFiles(String uriString) {
 		ArrayList<String> result = new ArrayList<>();
 
-		if (!DrivePath.isDirectory(uriString)) {
+		if (!PathUtil.isDirectory(uriString)) {
 			return result;
 		}
 
@@ -709,14 +709,14 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 					ZipEntry entry;
 					while ((entry = zipStream.getNextEntry()) != null) {
 						if (entry.isDirectory()) {
-							String resultparentdirectory = DrivePath.getParentDirectory(DrivePath.getDirectory(zipfilename + "|" + entry.getName()));
+							String resultparentdirectory = PathUtil.getParentDirectory(PathUtil.getDirectory(zipfilename + "|" + entry.getName()));
 							if (uriString.equals(resultparentdirectory)) {
 								result.add(zipfilename + "|" + entry.getName());
 							}
 
 //					} else if (!DrivePath.getExtension(entry.getName()).equalsIgnoreCase("zip")) {
-						} else if (Arrays.asList(displayext).contains(DrivePath.getExtension(entry.getName()).toLowerCase())) {
-							String resultdirectory = DrivePath.getDirectory(zipfilename + "|" + entry.getName());
+						} else if (Arrays.asList(displayext).contains(PathUtil.getExtension(entry.getName()).toLowerCase())) {
+							String resultdirectory = PathUtil.getDirectory(zipfilename + "|" + entry.getName());
 							if (uriString.equals(resultdirectory)) {
 								result.add(zipfilename + "|" + entry.getName());
 							}
@@ -763,10 +763,10 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 						if (isDirectory) {
 							result.add(documentUri.toString() + "/");
 
-						} else if (DrivePath.getExtension(name).equalsIgnoreCase("zip")) {
+						} else if (PathUtil.getExtension(name).equalsIgnoreCase("zip")) {
 							result.add(documentUri.toString() + "|");
 
-						} else if (Arrays.asList(displayext).contains(DrivePath.getExtension(name).toLowerCase())) {
+						} else if (Arrays.asList(displayext).contains(PathUtil.getExtension(name).toLowerCase())) {
 							result.add(documentUri.toString());
 						}
 
@@ -801,14 +801,14 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// MediaBrowerCompat に詰め込む(Directory)
 		for (String s : files) {
-			if (!DrivePath.isDirectory(s)) {
+			if (!PathUtil.isDirectory(s)) {
 				continue;
 			}
 
 			String t = s.substring(0, s.length() - 1);
 			MediaDescriptionCompat.Builder descriptionBuilder = new MediaDescriptionCompat.Builder()
 					.setMediaId(s)
-					.setTitle(Uri.decode(DrivePath.getFilename(t)));
+					.setTitle(Uri.decode(PathUtil.getFilename(t)));
 			MediaDescriptionCompat mediadescription = descriptionBuilder.build();
 
 			result.add(new MediaBrowserCompat.MediaItem(mediadescription, MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));
@@ -816,7 +816,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// MediaBrowerCompat に詰め込む(File)
 		for (String s : files) {
-			if (DrivePath.isDirectory(s)) {
+			if (PathUtil.isDirectory(s)) {
 				continue;
 			}
 
@@ -837,19 +837,19 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		String musiclistdir = "";
 		if (playMusicList.size() > 0) {
 			if (playMusicList.get(0).isPlayable()) {
-				musiclistdir = DrivePath.getDirectory(playMusicList.get(0).getDescription().getMediaId());
+				musiclistdir = PathUtil.getDirectory(playMusicList.get(0).getDescription().getMediaId());
 			} else {
 				musiclistdir = playMusicList.get(0).getDescription().getMediaId();
-				if (!DrivePath.isDirectory(musiclistdir)) {
+				if (!PathUtil.isDirectory(musiclistdir)) {
 					musiclistdir += "/";
 				}
-				musiclistdir = DrivePath.getParentDirectory(musiclistdir);
+				musiclistdir = PathUtil.getParentDirectory(musiclistdir);
 			}
 		}
 
 		// playmusiclist と mediaId のディレクトリが異なる場合、読み直し
-		if (!musiclistdir.equals(DrivePath.getDirectory(mediaId))) {
-			playMusicList = getMediaItems(DrivePath.getDirectory(mediaId));
+		if (!musiclistdir.equals(PathUtil.getDirectory(mediaId))) {
+			playMusicList = getMediaItems(PathUtil.getDirectory(mediaId));
 
 			// queue更新
 			setqueue(playMusicList);
@@ -985,9 +985,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		List<String> files;
 		if (downdirectory) {
-			files = listFiles(DrivePath.getDirectory(mediaId));
+			files = listFiles(PathUtil.getDirectory(mediaId));
 		} else {
-			files = listFiles(DrivePath.getParentDirectory(mediaId));
+			files = listFiles(PathUtil.getParentDirectory(mediaId));
 		}
 		/*
 		if (files.size() == 0) {
@@ -999,7 +999,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		List<String> musFiles = new ArrayList<>();    // 曲データ一覧
 
 		for (String s : files) {
-			if (DrivePath.isDirectory(s)) {
+			if (PathUtil.isDirectory(s)) {
 				dirFiles.add(s);
 			} else {
 				musFiles.add(s);
@@ -1053,20 +1053,20 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// １つ上のディレクトリに上がる
 		String mediaId2;
-		if (DrivePath.isDirectory(mediaId)) {
-			mediaId2 = DrivePath.getParentDirectory(mediaId);
+		if (PathUtil.isDirectory(mediaId)) {
+			mediaId2 = PathUtil.getParentDirectory(mediaId);
 		} else {
-			mediaId2 = DrivePath.getDirectory(mediaId);
+			mediaId2 = PathUtil.getDirectory(mediaId);
 		}
 
-		// rootDirectory、または、ドライブに到達したときの処理
-		if (mediaId2.equals(rootDirectory) || DrivePath.getDrive(getApplicationContext()).containsKey(mediaId2)) {
+		// rootDirectory に到達したときの処理
+		if (mediaId2.equals(rootDirectory)) {
 			files = listFiles(mediaId2);
 			dirFiles.clear();
 			musFiles.clear();
 
 			for (String s : files) {
-				if (DrivePath.isDirectory(s)) {
+				if (PathUtil.isDirectory(s)) {
 					dirFiles.add(s);
 				} else {
 					musFiles.add(s);
@@ -1115,9 +1115,9 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		List<String> files;
 		if (downdirectory) {
-			files = listFiles(DrivePath.getDirectory(mediaId));
+			files = listFiles(PathUtil.getDirectory(mediaId));
 		} else {
-			files = listFiles(DrivePath.getParentDirectory(mediaId));
+			files = listFiles(PathUtil.getParentDirectory(mediaId));
 		}
 		/*
 		if (files.size() == 0) {
@@ -1129,7 +1129,7 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 		List<String> musFiles = new ArrayList<>();    // 曲データ一覧
 
 		for (String s : files) {
-			if (DrivePath.isDirectory(s)) {
+			if (PathUtil.isDirectory(s)) {
 				dirFiles.add(s);
 			} else {
 				musFiles.add(s);
@@ -1182,20 +1182,20 @@ public class FMPMDDevService extends MediaBrowserServiceCompat {
 
 		// １つ上のディレクトリに上がる
 		String mediaId2;
-		if (DrivePath.isDirectory(mediaId)) {
-			mediaId2 = DrivePath.getParentDirectory(mediaId);
+		if (PathUtil.isDirectory(mediaId)) {
+			mediaId2 = PathUtil.getParentDirectory(mediaId);
 		} else {
-			mediaId2 = DrivePath.getDirectory(mediaId);
+			mediaId2 = PathUtil.getDirectory(mediaId);
 		}
 
-		// rootDirectory、または、ドライブに到達したときの処理
-		if (mediaId2.equals(rootDirectory) || DrivePath.getDrive(getApplicationContext()).containsKey(mediaId2)) {
+		// rootDirectory に到達したときの処理
+		if (mediaId2.equals(rootDirectory)) {
 			files = listFiles(mediaId2);
 			dirFiles.clear();
 			musFiles.clear();
 
 			for (String s : files) {
-				if (DrivePath.isDirectory(s)) {
+				if (PathUtil.isDirectory(s)) {
 					dirFiles.add(s);
 				} else {
 					musFiles.add(s);

@@ -1,7 +1,6 @@
 package jp.fmp.c60.fmpmddev;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
@@ -32,9 +31,6 @@ import java.util.List;
 class ArrayAdapterText<T> extends ArrayAdapter<T> {
 
     private int position = -1;
-
-    private static final int UNSELECTEXTCOLOR = Color.BLACK;
-
 
     public ArrayAdapterText(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
@@ -259,7 +255,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
                     if (child.isBrowsable()) {
                         adapter.add(child.getDescription().getTitle() + File.separator);
                     } else {
-                        adapter.add(DrivePath.getFilename(Uri.decode(child.getDescription().getMediaId())));
+                        adapter.add(PathUtil.getFilename(Uri.decode(child.getDescription().getMediaId())));
                     }
                 }
             }
@@ -270,7 +266,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
         }
 
         TextView textView = getView().findViewById(R.id.directoryname);
-        textView.setText(DrivePath.getDisplayPath(directory));
+        textView.setText(PathUtil.getDisplayPath(directory));
 
         this.bundle.putSerializable(KEY_LOCAL_SUBSCRIBECHILDREN, (Serializable)children);
 
@@ -370,19 +366,13 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
         ItemHeight itemHeight = new ItemHeight(this);
         ItemPos itemPos = new ItemPos(this);
 
-        int pListViewPos;
         ListView listView = getView().findViewById(R.id.listview_control);
 
         if(!directory.equals(bundle.getString(KEY_LOCAL_BROWSEDIRECTORY)) && listViewPosmap.containsKey(directory)) {
             // フォルダ変更、かつ listViewPosmap 登録済の場合、その値を基準とする
             ListViewPos p = listViewPosmap.get(directory);
-            pListViewPos = p.getPos();
-            listView.setSelectionFromTop(pListViewPos, p.getTop());
-            itemPos.setValue(pListViewPos, p.getTop());
-
-        } else {
-            // フォルダ変更なし、または listViewPosmap 未登録の場合、listView の先頭行を基準とする
-            pListViewPos = itemPos.getTop();
+            listView.setSelectionFromTop(p.getPos(), p.getTop());
+            itemPos.setValue(p.getPos(), p.getTop());
         }
 
         // 演奏中の曲番号を解除(＝フォントの色を戻す)
@@ -463,7 +453,7 @@ public class ControlFragment extends Fragment implements View.OnClickListener, L
 
         if(position == 0 && directory.length() > getArguments().getString(Common.KEY_ACTIVITY_TO_CONTROL_ROOTDIRECTORY).length()) {
             // 親ディレクトリに戻る
-            directory = DrivePath.getParentDirectory(directory);
+            directory = PathUtil.getParentDirectory(directory);
 
             // ダイアログとビューを更新
             Bundle lBundle = new Bundle();

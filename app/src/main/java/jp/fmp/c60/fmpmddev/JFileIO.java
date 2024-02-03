@@ -12,7 +12,6 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
@@ -27,7 +26,7 @@ public class JFileIO {
 
 		private final int id;
 
-		private Frags(final int id) {
+		Frags(final int id) {
 			this.id = id;
 		}
 
@@ -43,7 +42,7 @@ public class JFileIO {
 
 		private final int id;
 
-		private SeekMethod(final int id) {
+		SeekMethod(final int id) {
 			this.id = id;
 		}
 
@@ -60,7 +59,7 @@ public class JFileIO {
 
 		private final int id;
 
-		private Error(final int id) {
+		Error(final int id) {
 			this.id = id;
 		}
 
@@ -71,18 +70,12 @@ public class JFileIO {
 
 	private final Context context;
 	private int flags = 0;
-	private int lorigin = 0;
-	private Error error = Error.error_success;
-	private String path = "";
-	private RandomAccessFile raf = null;
 	private byte[] data = null;
 	private int filepointer = 0;
 
 	HashMap<String, String> exthashmap;
 
 	int GetFlags() { return flags; }
-
-	void SetLogicalOrigin(int origin) { lorigin = origin; }
 
 
 	// ---------------------------------------------------------------------------
@@ -135,9 +128,9 @@ public class JFileIO {
 			fullfilename = filename;
 		} else {
 			if(path.endsWith("|")) {
-				fullfilename = path + DrivePath.getFilename(filename);
+				fullfilename = path + PathUtil.getFilename(filename);
 			} else {
-				fullfilename = path.substring(0, path.length() - 1) + "%2F" + DrivePath.getFilename(filename);
+				fullfilename = path.substring(0, path.length() - 1) + "%2F" + PathUtil.getFilename(filename);
 			}
 		}
 		return fullfilename;
