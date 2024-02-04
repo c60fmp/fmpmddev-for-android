@@ -52,14 +52,19 @@ class ArrayAdapterExtDir extends ArrayAdapter<ExtDirItem> {
 public class SettingDialogFragment extends DialogFragment implements LinearLayout.OnClickListener, AdapterView.OnItemClickListener, FragmentResultListener {
 
     // SettingDialog Fragment Tag
-    public static final String SETTINGDIALOG_FRAGMENT_TAG   = "SettingDialogFragment";
+    public static final String SETTINGDIALOG_FRAGMENT_TAG       = "SettingDialogFragment";
 
-    private static final String KEY_LOCAL_LOOPCOUNT         = "localLoopCount";
+    private static final String KEY_LOCAL_LOOPCOUNT             = "localLoopCount";
 
-    private static final String KEY_LOCAL_ROOTDIRECTORY     = "localRootDirectory";
+    private static final String KEY_LOCAL_ROOTDIRECTORY         = "localRootDirectory";
 
-    private static final String KEY_LOCAL_PCMEXTDIRECTORY   = "localPCMExtDirectory";
+    private static final String KEY_LOCAL_PCMEXTDIRECTORY       = "localPCMExtDirectory";
 
+    private static final String KEY_LOCAL_SAVELOOPCOUNT         = "localSaveLoopCount";
+
+    private static final String KEY_LOCAL_SAVEROOTDIRECTORY     = "localSaveRootDirectory";
+
+    private static final String KEY_LOCAL_SAVEPCMEXTDIRECTORY   = "localSavePCMExtDirectory";
 
     // Setting Dialog Fragment から呼び出す Callback
     public interface SettingDialogFragmentListener {
@@ -95,9 +100,16 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
 
-        bundle.putInt(KEY_LOCAL_LOOPCOUNT, getArguments().getInt(Common.KEY_ACTIVITY_TO_SETTING_LOOPCOUNT));
-        bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
-        bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY, new ExtDirItem[0]));
+        if(savedInstanceState == null) {
+            bundle.putInt(KEY_LOCAL_LOOPCOUNT, getArguments().getInt(Common.KEY_ACTIVITY_TO_SETTING_LOOPCOUNT));
+            bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_ACTIVITY_TO_SETTING_ROOTDIRECTORY));
+            bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(getArguments(), Common.KEY_ACTIVITY_TO_SETTING_PCMEXTDIRECTORY, new ExtDirItem[0]));
+
+        } else {
+            bundle.putInt(KEY_LOCAL_LOOPCOUNT, savedInstanceState.getInt(KEY_LOCAL_SAVELOOPCOUNT));
+            bundle.putString(KEY_LOCAL_ROOTDIRECTORY, savedInstanceState.getString(KEY_LOCAL_SAVEROOTDIRECTORY));
+            bundle.putSerializable(KEY_LOCAL_PCMEXTDIRECTORY, Common.suppressSerializable(savedInstanceState, KEY_LOCAL_SAVEPCMEXTDIRECTORY, new ExtDirItem[0]));
+        }
 
         // ダイアログのメインビュー設定、及び、ListView 取得
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -268,5 +280,14 @@ public class SettingDialogFragment extends DialogFragment implements LinearLayou
         adapter.clear();
         adapter.addAll(extDirItem2);
         adapter.notifyDataSetChanged();
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_LOCAL_SAVELOOPCOUNT, bundle.getInt(KEY_LOCAL_LOOPCOUNT));
+        outState.putString(KEY_LOCAL_SAVEROOTDIRECTORY, bundle.getString(KEY_LOCAL_ROOTDIRECTORY));
+        outState.putSerializable(KEY_LOCAL_SAVEPCMEXTDIRECTORY, Common.suppressSerializable(bundle, KEY_LOCAL_PCMEXTDIRECTORY, new ExtDirItem[0]));
     }
 }

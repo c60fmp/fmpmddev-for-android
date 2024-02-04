@@ -31,6 +31,8 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
 
     private static final String KEY_LOCAL_DIRECTORY         = "localDirectory";
 
+    private static final String KEY_LOCAL_SAVEDIRECTORY     = "localSaveDirectory";
+
     private static final String KEY_LOCAL_SUBSCRIBECHILDREN = "localSubscribeChildren";
 
     // アダプター
@@ -46,7 +48,13 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
 
         bundle.putString(KEY_LOCAL_ROOTDIRECTORY, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_ROOTDIRECTORY));
         bundle.putString(KEY_LOCAL_EXTENSION, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXT));
-        bundle.putString(KEY_LOCAL_DIRECTORY, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY));
+
+        if(savedInstanceState == null) {
+            bundle.putString(KEY_LOCAL_DIRECTORY, getArguments().getString(Common.KEY_SETTING_TO_DIRECTORY_PCMEXTDIRECTORY));
+
+        } else {
+            bundle.putString(KEY_LOCAL_DIRECTORY, savedInstanceState.getString(KEY_LOCAL_SAVEDIRECTORY));
+        }
 
         // ダイアログのメインビュー設定、及び、ListView取得
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -161,5 +169,12 @@ public class DirectoryDialogFragment extends DialogFragment implements ListView.
                 ((MainActivity)getActivity()).subscribecached(lBundle);
             }
         }
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(KEY_LOCAL_SAVEDIRECTORY, bundle.getString(KEY_LOCAL_DIRECTORY));
     }
 }

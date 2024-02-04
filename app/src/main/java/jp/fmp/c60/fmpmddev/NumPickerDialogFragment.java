@@ -18,6 +18,9 @@ public class NumPickerDialogFragment extends DialogFragment implements NumberPic
 
     public static final String KEY_LOCAL_VALUE              = "localValue";
 
+    public static final String KEY_LOCAL_SAVEVALUE          = "localSaveValue";
+
+
     // ダイアログで保持する必要のある Bundle
     Bundle bundle = new Bundle();
 
@@ -25,7 +28,11 @@ public class NumPickerDialogFragment extends DialogFragment implements NumberPic
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
         super.onCreateDialog(savedInstanceState);
 
-        bundle.putInt(KEY_LOCAL_VALUE, getArguments().getInt(Common.KEY_SETTING_TO_NUMPICKER_VALUE));
+        if(savedInstanceState == null) {
+            bundle.putInt(KEY_LOCAL_VALUE, getArguments().getInt(Common.KEY_SETTING_TO_NUMPICKER_VALUE));
+        } else {
+            bundle.putInt(KEY_LOCAL_VALUE, savedInstanceState.getInt(KEY_LOCAL_SAVEVALUE));
+        }
 
         // ダイアログのメインビュー設定、及び、ListView 取得
         LayoutInflater inflater = requireActivity().getLayoutInflater();
@@ -54,7 +61,7 @@ public class NumPickerDialogFragment extends DialogFragment implements NumberPic
         NumberPicker np = numPickerView.findViewById(R.id.numberPicker);
         np.setMinValue(1);
         np.setMaxValue(9);
-        np.setValue(getArguments().getInt(Common.KEY_SETTING_TO_NUMPICKER_VALUE));
+        np.setValue(bundle.getInt(KEY_LOCAL_VALUE));
         np.setOnValueChangedListener(this);
 
         // Create the AlertDialog object and return it
@@ -65,5 +72,12 @@ public class NumPickerDialogFragment extends DialogFragment implements NumberPic
     @Override
     public void onValueChange(NumberPicker numberPicker, int oldVal, int newVal) {
           bundle.putInt(KEY_LOCAL_VALUE, newVal);
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(KEY_LOCAL_SAVEVALUE, bundle.getInt(KEY_LOCAL_VALUE));
     }
 }

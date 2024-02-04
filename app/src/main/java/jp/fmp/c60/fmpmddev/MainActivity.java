@@ -431,6 +431,9 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		if(mediaItemHashmap.containsKey(parentId)) {
 			subscriptionCallbackd.onChildrenLoaded(parentId, mediaItemHashmap.get(parentId));
 		} else {
+			if(browser == null) {
+				startMediaBrowser();
+			}
 			browser.subscribe(parentId, subscriptionCallbackd);
 		}
 	}
