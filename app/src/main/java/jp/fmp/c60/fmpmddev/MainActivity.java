@@ -68,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 	// Service が bind されていれば true
 	private boolean bound = false;
 
+	private boolean startActivity = false;
+
 	// Activity から Service への情報伝達のための Messenger
 	private Messenger serviceMessenger;
 
@@ -210,6 +212,8 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 			Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
 			bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 		}
+
+		startActivity = true;
 	}
 
 
@@ -325,8 +329,10 @@ public class MainActivity extends AppCompatActivity implements ControlFragment.C
 		serviceRunning = true;
 
 		// bind to the Service
-		Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
-		bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+		if(startActivity) {
+			Intent serviceIntent = new Intent(MainActivity.this, FMPMDDevService.class);
+			bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+		}
 	}
 
 
