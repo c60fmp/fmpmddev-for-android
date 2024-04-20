@@ -1,7 +1,7 @@
 # FMPMDDev for Android
 
 ## 初めに
-このプログラムは、FM 音源ドライバの曲データを Windows 上で聞くためのプレイヤです。
+このプログラムは、FM 音源ドライバの曲データを Android デバイス(スマートフォン等)で聞くためのプレイヤです。
 「PMD98」と「MXDRV」の曲データに対応しており、下記のドライバを使用しております。
 
 * PMDWin
@@ -9,6 +9,18 @@ http://c60.la.coocan.jp/
 
 * Portable mdx decoder
 https://github.com/yosshin4004/portable_mdx
+
+
+## インストール方法
+ソースコードからビルドする、あるいはバイナリを直接インストールできます。
+PC からバイナリをインストールする場合、下記手順にしたがってください。
+* PC に SDK Platform Tools をインストール
+https://developer.android.com/tools/releases/platform-tools
+* バイナリファイル「app-debug.apk」をダウンロードする
+* スマートフォンの「設定」→「デバイス情報」→「ビルド番号」を連打し、開発者モードに入る
+* 「設定」→「システム」→「開発者向けオプション」を選択し、「USB デバッグ」をオンにする
+* スマートフォンを PC に接続する
+* PC でコマンドプロンプトを開き「adb install app-debug.apk」と入力し、ENTER を押す
 
 
 ## 環境設定
@@ -40,6 +52,8 @@ zipアーカイブも通常のディレクトリと同様に扱うことがで�
 * ファイルアクセスを SAF(Storage Access Framework) に変更     
 * MXDRV の曲長取得精度向上
 * Version1.0.0-alpha.1の バグフィックス
+### 2024/04/20 Ver2.0.0-alpha-2
+* Android14に対応
  
 ## ライセンス
 * FMPMDDev for android
